@@ -32,7 +32,7 @@
         event_box.add(icon);
 
         popover = new MainPopover(event_box);
-
+        event_box.add(popover);
         this.add(event_box);
         this.show_all();
 
@@ -43,6 +43,8 @@
                 } else {
                     this.manager.show_popover(event_box);
                 }
+            } else if (e.button == 2) {
+                popover.text_view.buffer.text = "asdf";
             } else {
                 return Gdk.EVENT_PROPAGATE;
             }
