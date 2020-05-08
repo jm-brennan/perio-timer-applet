@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
-#meson --prefix=/usr build
+if [ ! -d "build" ]; then
+	meson --prefix=/usr build
+fi
 ninja -C build
 sudo ninja install -C build

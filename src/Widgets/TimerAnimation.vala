@@ -16,9 +16,9 @@ public class TimerAnimation : Gtk.Widget {
         print("constructed");
         set_has_window (false);
         startTime = GLib.get_monotonic_time();
-        this.set_size_request(50,50);
+        //this.set_size_request(150,300);
         update();
-        Timeout.add(60, update);
+        Timeout.add(1000, update);
     }
 
     private bool update () {
@@ -31,6 +31,7 @@ public class TimerAnimation : Gtk.Widget {
     private void redraw_canvas() {
         var window = get_window();
         if (null == window) {
+            print("no window");
             return;
         }
 
@@ -42,11 +43,11 @@ public class TimerAnimation : Gtk.Widget {
 
     public override bool draw(Cairo.Context cr) {
         print("drawing");
-        double xc = 25.0;
-	    double yc = 25.0;
-	    double radius = 15.0;
+        double xc = 150.0;
+	    double yc = 125.0;
+	    double radius = 100.0;
         
-        cr.set_source_rgba(1, 0.2, 0.2, 0.6);
+        cr.set_source_rgba(1, 0.2, 0.2, 0.7);
         cr.set_line_width(10.0);
         //double t = double(GLib.get_monotonic_time());
         //stdout.printf("%lld\n", t);

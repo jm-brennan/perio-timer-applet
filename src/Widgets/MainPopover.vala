@@ -32,13 +32,25 @@ namespace PatternTimer.Widgets {
 
             main_view.pack_start(title_header, false, false, 0);
             
+
+            Overlay over = new Overlay();
+            TimerAnimation ta = new TimerAnimation(this);
+            
             text_view = new TextView();
+            text_view.set_size_request(150,300);
+            text_view.set_top_margin(90);
             text_view.set_justification(Justification.CENTER);
             text_view.buffer.text = display_text;
             text_view.cursor_visible = false;
             text_view.set_editable(false);
-            main_view.pack_start(text_view, false, false, 0);
+
+            over.add(text_view);
+            over.add_overlay(ta);
+
+            main_view.pack_start(over, false, false, 0);
             
+
+
             this.settings_view = new Box(Orientation.HORIZONTAL, 0);
             ToggleButton repeat_butt = new ToggleButton();
             ToggleButton volume_butt = new ToggleButton();
@@ -60,10 +72,7 @@ namespace PatternTimer.Widgets {
             settings_view.pack_start(volume_butt, true, false, 0);
             main_view.pack_start(settings_view, true, true, 0);
 
-            print("making ta");
-            TimerAnimation ta = new TimerAnimation(this);
-            print("made ta");
-            main_view.pack_start(ta, false, false, 0);
+            
             stack.add_named(main_view, "main");
 
             stack.show_all();
