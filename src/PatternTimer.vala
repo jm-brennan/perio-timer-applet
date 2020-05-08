@@ -1,38 +1,50 @@
-/*
- * This file is part of budgie-desktop
- *
- * Copyright © 2017-2019 Budgie Desktop Developers
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- */
- using PatternTimer.Widgets;
+using PatternTimer.Widgets;
 
- namespace PatternTimer {
+namespace PatternTimer {
+
+public class Plugin : Budgie.Plugin, Peas.ExtensionBase {
+    public Budgie.Applet get_panel_widget(string uuid) {
+        return new Applet(uuid);
+    }
+}
  
- public class Plugin : Budgie.Plugin, Peas.ExtensionBase {
-     public Budgie.Applet get_panel_widget(string uuid) {
-         return new Applet(uuid);
-     }
- }
- 
- public class Applet : Budgie.Applet {
-     private Gtk.EventBox event_box;
-     private MainPopover? popover = null;
-     private unowned Budgie.PopoverManager? manager = null;
-     public string uuid { public set; public get; }
- 
-     public Applet(string uuid) {
+public class Applet : Budgie.Applet {
+    private Gtk.EventBox event_box;
+    private MainPopover? popover = null;
+    private unowned Budgie.PopoverManager? manager = null;
+    public string uuid { public set; public get; }
+
+    public Applet(string uuid) {
         Object(uuid: uuid);
+        var style = """
+                textview {
+                    font-family: lato;
+                    font-weight: 300;
+                    letter-spacing: 3px;
+                    font-size: 40px;
+                }
+            """;
+
+        var css_provider = new Gtk.CssProvider();
+
+        try {
+            css_provider.load_from_data(style, -1);
+        } catch (GLib.Error e) {
+            warning ("Failed to parse css style : %s", e.message);
+        }
+
+        Gtk.StyleContext.add_provider_for_screen (
+                Gdk.Screen.get_default (),
+                css_provider,
+                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        );
 
         event_box = new Gtk.EventBox();
         Gtk.Image icon = new Gtk.Image.from_icon_name("alarm-symbolic", Gtk.IconSize.MENU);
         event_box.add(icon);
 
         popover = new MainPopover(event_box);
-        event_box.add(popover);
+        //event_box.add(popover);
         this.add(event_box);
         this.show_all();
 
@@ -43,31 +55,28 @@
                 } else {
                     this.manager.show_popover(event_box);
                 }
-            } else if (e.button == 2) {
-                popover.text_view.buffer.text = "asdf";
             } else {
                 return Gdk.EVENT_PROPAGATE;
             }
 
             return Gdk.EVENT_STOP;
         });
-     }
+    }
+
+    public override void update_popovers(Budgie.PopoverManager? manager) {
+        manager.register_popover(event_box, popover);
+        this.manager = manager;
+    }
+}
  
-     public override void update_popovers(Budgie.PopoverManager? manager) {
-         manager.register_popover(event_box, popover);
-         this.manager = manager;
-     }
- }
- 
- } // End namespace
+} // End namespace
  
  
  
- [ModuleInit]
- public void peas_register_types(TypeModule module)
- {
-     // boilerplate - all modules need this
-     var objmodule = module as Peas.ObjectModule;
-     objmodule.register_extension_type(typeof(Budgie.Plugin), typeof(PatternTimer.Plugin));
- }
- 
+[ModuleInit]
+public void peas_register_types(TypeModule module)
+{
+    // boilerplate - all modules need this
+    var objmodule = module as Peas.ObjectModule;
+    objmodule.register_extension_type(typeof(Budgie.Plugin), typeof(PatternTimer.Plugin));
+}
