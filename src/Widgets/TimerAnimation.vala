@@ -13,7 +13,7 @@ public class TimerAnimation : Gtk.Widget {
 /*      public TimerAnimation(PatternTimer.Timer[]) {
 
     }  */
-    public TimerAnimation(Gtk.Widget? window_parent) {
+    public TimerAnimation() {
         //Object(relative_to: window_parent);
         print("constructed");
         set_has_window (false);
@@ -47,40 +47,43 @@ public class TimerAnimation : Gtk.Widget {
 
     public override bool draw(Cairo.Context cr) {
         if (this.active) {
-            double xc = 150.0;
-            double yc = 125.0;
-            double radius = 100.0;
-            
-            cr.set_line_width(10.0);
-            cr.set_source_rgba(0.8, 0.324, 0.203, 1); // CD5334  also, yellow = # EDB88B
-            
-            if (degree >= -379) {
-                cr.arc(xc, yc, radius, -20 * (Math.PI/180.0), degree * (Math.PI/180.0));
-                cr.stroke();
-                cr.set_source_rgba(0.0898, 0.742, 0.730, 1); // blue # 17BEBB
-                cr.arc(xc, yc, radius, -90 * (Math.PI/180.0), -20 * (Math.PI/180.0));
-            } else {
-                cr.set_source_rgba(0.0898, 0.742, 0.730, 1); // blue # 17BEBB
-                cr.arc(xc, yc, radius, -90 * (Math.PI/180.0), degree * (Math.PI/180.0));
-            }
-            
-
-            //double t = double(GLib.get_monotonic_time());
-            //stdout.printf("%lld\n", t);
-            //int64 diff = (this.time - this.startTime);
-            //double perc = double(diff / timerLength);
-            //stdout.printf("%lld\n", diff);
-            //degree = -90 - (((this.time - this.startTime) / timerLength) * 360);
-            
-            //cr.arc(xc, yc, radius, 0, 180);
-            //cr.arc(xc, yc, radius, -90 * (Math.PI/180.0), degree * (Math.PI/180.0));
             degree--;
-            if (degree <= -450) {
-                degree = -90;
-            }
-            cr.stroke();
-
         }
+        
+        double xc = 150.0;
+        double yc = 125.0;
+        double radius = 100.0;
+        
+        cr.set_line_width(10.0);
+        cr.set_source_rgba(0.8, 0.324, 0.203, 1); // CD5334  also, yellow = # EDB88B
+        
+        if (degree >= -379) {
+            cr.arc(xc, yc, radius, -20 * (Math.PI/180.0), degree * (Math.PI/180.0));
+            cr.stroke();
+            cr.set_source_rgba(0.0898, 0.742, 0.730, 1); // blue # 17BEBB
+            cr.arc(xc, yc, radius, -90 * (Math.PI/180.0), -20 * (Math.PI/180.0));
+        } else {
+            cr.set_source_rgba(0.0898, 0.742, 0.730, 1); // blue # 17BEBB
+            cr.arc(xc, yc, radius, -90 * (Math.PI/180.0), degree * (Math.PI/180.0));
+        }
+        
+
+        //double t = double(GLib.get_monotonic_time());
+        //stdout.printf("%lld\n", t);
+        //int64 diff = (this.time - this.startTime);
+        //double perc = double(diff / timerLength);
+        //stdout.printf("%lld\n", diff);
+        //degree = -90 - (((this.time - this.startTime) / timerLength) * 360);
+        
+        //cr.arc(xc, yc, radius, 0, 180);
+        //cr.arc(xc, yc, radius, -90 * (Math.PI/180.0), degree * (Math.PI/180.0));
+        
+        if (degree <= -450) {
+            degree = -90;
+        }
+        cr.stroke();
+
+        
         return true;
     }
     public void toggle_state() {

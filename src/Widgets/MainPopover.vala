@@ -11,6 +11,9 @@ namespace PatternTimer.Widgets {
         public TextView? text_view = null;
         public string display_text = "12:34";
         private Image? volume_image = null;
+        private bool clock_continue = false;
+        private PTimer[] timers = new PTimer[3];
+        private int currentTimer = 0;
 
         public MainPopover(Widget? window_parent) {
             Object(relative_to: window_parent);
@@ -33,7 +36,7 @@ namespace PatternTimer.Widgets {
             main_view.pack_start(title_header, false, false, 0);
             
 
-            Overlay over = new Overlay();
+            /*  Overlay over = new Overlay();
             over.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK);
             TimerAnimation ta = new TimerAnimation(this);
             over.button_press_event.connect((e) => {
@@ -42,6 +45,8 @@ namespace PatternTimer.Widgets {
                 print("\n");
                 print(e.y.to_string());
                 ta.toggle_state();
+                this.clock_continue = !this.clock_continue;
+                Timeout.add(1000, update);
                 return true;
             });
             /*  over.button_release_event.connect((e) => {
@@ -54,7 +59,7 @@ namespace PatternTimer.Widgets {
             over.leave_notify_event.connect(() => {
                 print("LEFT");
                 return true;
-            });  */
+            });
             
             text_view = new TextView();
             text_view.set_size_request(150,300);
@@ -89,7 +94,9 @@ namespace PatternTimer.Widgets {
 
             settings_view.pack_start(repeat_butt, true, false, 0);
             settings_view.pack_start(volume_butt, true, false, 0);
-            main_view.pack_start(settings_view, true, true, 10);
+            main_view.pack_start(settings_view, true, true, 10);  */
+            timers[0] = new PTimer();
+            main_view.pack_start(timers[0].timer_view(), false, false, 0);
 
             
             stack.add_named(main_view, "main");
@@ -97,24 +104,25 @@ namespace PatternTimer.Widgets {
             stack.show_all();
 
             add(stack);
-            Timeout.add(1000, update);
+            
         }
 
-        private bool update() {
-            if (this.text_view.buffer.text == "12:34") {
-                this.text_view.buffer.text = "12:35";
-            } else {
-                this.text_view.buffer.text = "12:34";
+        /*  private bool update() {
+            if (this.clock_continue) {
+                if (this.text_view.buffer.text == "12:34") {
+                    this.text_view.buffer.text = "12:35";
+                } else {
+                    this.text_view.buffer.text = "12:34";
+                }
             }
-            return true;
-        }
+            return this.clock_continue;
+        }  */
 
         public void set_page(string page) {
             this.stack.set_visible_child_name(page);
         }
         public override bool key_press_event (Gdk.EventKey event) {
-            text_view.buffer.text = event.str;
-            print(event.str);
+            timers[currentTimer].update_display(event.str);
             return Gdk.EVENT_PROPAGATE;
         }
     } // End class
