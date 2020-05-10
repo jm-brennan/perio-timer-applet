@@ -9,18 +9,34 @@ public class TimerAnimation : Gtk.Widget {
     private int64 startTime;
     private bool active = false;
     private int update_interval = 60;
+    
+    // @temporary
+    private double[] c0 = new double[3];
+    private double[] c1 = new double[3];
+    private int switchDegree;
 
-/*      public TimerAnimation(PatternTimer.Timer[]) {
-
-    }  */
-    public TimerAnimation() {
-        //Object(relative_to: window_parent);
-        print("constructed");
+    public TimerAnimation(int colorset) {
         set_has_window (false);
         startTime = GLib.get_monotonic_time();
-        //this.set_size_request(150,300);
-        update();
-        Timeout.add(this.update_interval, update);
+
+        if (colorset == 0) {
+            c0[0] = 0.8;
+            c0[1] = 0.324;
+            c0[2] = 0.203;
+
+            c1[0] = 0.0898;
+            c1[1] = 0.742;
+            c1[2] = 0.73;
+        } else if (colorset == 1) {
+            c0[0] = 0.367;
+            c0[1] = 0.691;
+            c0[2] = 0.746;
+
+            c1[0] = 0.953;
+            c1[1] = 0.875;
+            c1[2] = 0.3;
+        }
+        switchDegree = GLib.Random.int_range(-20,60);
     }
 
     private bool update () {
@@ -55,15 +71,15 @@ public class TimerAnimation : Gtk.Widget {
         double radius = 100.0;
         
         cr.set_line_width(10.0);
-        cr.set_source_rgba(0.8, 0.324, 0.203, 1); // CD5334  also, yellow = # EDB88B
+        cr.set_source_rgb(c0[0], c0[1], c0[2]);
         
-        if (degree >= -379) {
-            cr.arc(xc, yc, radius, -20 * (Math.PI/180.0), degree * (Math.PI/180.0));
+        if (degree >= (-359 - switchDegree)) {
+            cr.arc(xc, yc, radius, -1*switchDegree * (Math.PI/180.0), degree * (Math.PI/180.0));
             cr.stroke();
-            cr.set_source_rgba(0.0898, 0.742, 0.730, 1); // blue # 17BEBB
-            cr.arc(xc, yc, radius, -90 * (Math.PI/180.0), -20 * (Math.PI/180.0));
+            cr.set_source_rgb(c1[0], c1[1], c1[2]);
+            cr.arc(xc, yc, radius, -90 * (Math.PI/180.0), -1*switchDegree * (Math.PI/180.0));
         } else {
-            cr.set_source_rgba(0.0898, 0.742, 0.730, 1); // blue # 17BEBB
+            cr.set_source_rgb(c1[0], c1[1], c1[2]);
             cr.arc(xc, yc, radius, -90 * (Math.PI/180.0), degree * (Math.PI/180.0));
         }
         
@@ -86,16 +102,21 @@ public class TimerAnimation : Gtk.Widget {
         
         return true;
     }
-    public void toggle_state() {
-        if (this.active == true) {
-            print("TA: false");
-            this.active = false;
+    
+    // I think its fine to just get rid of this, ideally the actuall timer
+    // should just always be setting active or inactive
+    /*  public void toggle_active() { 
+        if (active) {
+            active = false;
         } else {
-            print("TA: true");
-            this.active = true;
-            Timeout.add(this.update_interval, update);
+            active = true;
+            Timeout.add(update_interval, update);
         }
-    }
+     }  */
+
+    public void set_inactive() { active = false; }
+
+    public void set_active() { active = true; Timeout.add(update_interval, update); }
 }
 }
 
