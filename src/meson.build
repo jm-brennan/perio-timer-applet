@@ -24,7 +24,8 @@ applet_sources =[
     'PatternTimer.vala',
     'Widgets/PTimer.vala',
     'Widgets/MainPopover.vala',
-    'Widgets/TimerAnimation.vala'
+    'Widgets/TimerAnimation.vala',
+    'Widgets/InputManager.vala'
 ]
 
 vala_args = [

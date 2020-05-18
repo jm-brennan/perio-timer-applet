@@ -4,6 +4,7 @@ namespace PatternTimer.Widgets {
 public class PTimer {
     private Overlay? overlay = null;
     private TimerAnimation? ta = null;
+    public InputManager? im = null;
     private TextView? textView = null;
     private Box? timerView = null;
     private Box? settingsView = null;
@@ -13,17 +14,20 @@ public class PTimer {
     private Image repeat_i = null;
     private bool active = false;
     private int update_interval = 1000;
-
+    private bool repeat = false;
+    
     // @temporary
     public string t1 = "";
     public string t2 = "";
+    private int64 storedTime = 0;
+    private int64 startTime = 0;
 
     public PTimer(string t1, string t2, int colorset) {
         this.t1 = t1;
         this.t2 = t2;
 
 
-
+        im = new InputManager(this);
         timerView = new Box(Orientation.VERTICAL, 0);
         
         overlay = new Overlay();
@@ -85,21 +89,30 @@ public class PTimer {
         return this.timerView;
     }
 
-    public void toggle_active() {
+    public void toggle_active(bool startable = false) {
         if (active) {
             set_inactive();
         } else {
+            // if this toggle call does not have start privileges
+            // and timer hasn't been started, just return
+            if (!startable && startTime == 0) return;
             set_active();
         }
     }
 
     public void set_active() {
+        if (active) return;
+
+        if (startTime == 0) {
+            startTime = GLib.get_monotonic_time();
+        }
         active = true;
         Timeout.add(update_interval, update_time);
         ta.set_active();
     }
 
     public void set_inactive() {
+        if (!active) return;
         active = false;
         ta.set_inactive();
     }
@@ -108,6 +121,12 @@ public class PTimer {
         textView.buffer.text = newDisplay;
     }
 
+    public void toggle_repeat() {
+        repeat = !repeat;
+    }
+    /*  
+     time drifts by about 1/10 seconds every two minutes when just doing timeouts 
+     */
     private bool update_time() {
         if (active) {
             if (textView.buffer.text == t1) {

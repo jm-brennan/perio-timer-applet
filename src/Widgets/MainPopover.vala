@@ -23,6 +23,7 @@ namespace PatternTimer.Widgets {
             stack.set_transition_type(StackTransitionType.SLIDE_LEFT_RIGHT);
             stackSwitcher = new StackSwitcher();
             stackSwitcher.stack = stack;
+            stackSwitcher.set_halign(Align.CENTER);
 
             mainView = new Box(Orientation.VERTICAL, 0);
             mainView.set_homogeneous(false);
@@ -43,8 +44,10 @@ namespace PatternTimer.Widgets {
 
                     currentTimer++;
                     if (currentTimer == 1) {
-                        mainView.pack_start(stackSwitcher, true, true, 0);
-                        mainView.reorder_child(stackSwitcher, 1);
+                        var ssBox = new Box(Orientation.HORIZONTAL, 0);
+                        ssBox.pack_start(stackSwitcher, true, true);
+                        mainView.pack_start(ssBox, true, true, 0);
+                        mainView.reorder_child(ssBox, 1);
                     }
                     timers[currentTimer] = new PTimer("43:21", "43:22", 1);
                     stack.add_titled(timers[currentTimer].timer_view(), currentTimer.to_string(), currentTimer.to_string());
@@ -53,24 +56,30 @@ namespace PatternTimer.Widgets {
                 }
             });
             header.pack_end(headerNew_b, false, false, 0);
-            //header.show_all();
             mainView.pack_start(header, false, false, 0);
             
             timers[0] = new PTimer("12:34", "12:33", 0);
             stack.add_titled(timers[0].timer_view(), currentTimer.to_string(), currentTimer.to_string());
 
-            //mainView.pack_start(stackSwitcher, true, true, 0);
             mainView.pack_start(stack, false, false, 0);
             mainView.show_all();
             add(mainView);
         }
 
-        public void set_page(string page) {
-            //this.stack.set_visible_child_name(page);
-        }
-
         public override bool key_press_event (Gdk.EventKey event) {
-            timers[currentTimer].set_display_text(event.str);
+            print(event.keyval.to_string());
+            print("\n");
+            switch (event.keyval) {
+                case KeyCode.ENTER:
+                    timers[currentTimer].set_active();
+                    break;
+                case KeyCode.SPACE:
+                    timers[currentTimer].toggle_active();
+                    break;
+                default:
+                    timers[currentTimer].im.send_key(event.str);
+                    break;
+            }
             return Gdk.EVENT_PROPAGATE;
         }
     } // End class

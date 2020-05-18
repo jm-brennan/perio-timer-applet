@@ -44,7 +44,6 @@ public class Applet : Budgie.Applet {
         event_box.add(icon);
 
         popover = new MainPopover(event_box);
-        //event_box.add(popover);
         this.add(event_box);
         this.show_all();
 
