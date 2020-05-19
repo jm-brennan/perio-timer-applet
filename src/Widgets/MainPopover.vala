@@ -23,7 +23,17 @@ namespace PatternTimer.Widgets {
             stack.set_transition_type(StackTransitionType.SLIDE_LEFT_RIGHT);
             stackSwitcher = new StackSwitcher();
             stackSwitcher.stack = stack;
+            stackSwitcher.set_homogeneous(true);
             stackSwitcher.set_halign(Align.CENTER);
+            stack.notify.connect(() => {
+                print("stack switched\n");
+                //stack.set_visible_child_name(stack.get_visible_child_name());
+                string visibleChildName = stack.get_visible_child_name();
+                if (visibleChildName == null) {
+                    visibleChildName = "0";
+                }
+                currentTimer = int.parse(visibleChildName);
+            });
 
             mainView = new Box(Orientation.VERTICAL, 0);
             mainView.set_homogeneous(false);
@@ -76,8 +86,11 @@ namespace PatternTimer.Widgets {
                 case KeyCode.SPACE:
                     timers[currentTimer].toggle_active();
                     break;
+                case KeyCode.BACK:
+                    timers[currentTimer].im.backspace();
+                    break;
                 default:
-                    timers[currentTimer].im.send_key(event.str);
+                    timers[currentTimer].im.send_key(event.keyval, event.str);
                     break;
             }
             return Gdk.EVENT_PROPAGATE;

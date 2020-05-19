@@ -15,6 +15,7 @@ public class PTimer {
     private bool active = false;
     private int update_interval = 1000;
     private bool repeat = false;
+    private bool mute = false;
     
     // @temporary
     public string t1 = "";
@@ -122,7 +123,11 @@ public class PTimer {
     }
 
     public void toggle_repeat() {
-        repeat = !repeat;
+        repeat_b.set_active(!repeat_b.get_active());
+    }
+
+    public void toggle_mute() {
+        volume_b.set_active(!volume_b.get_active());
     }
     /*  
      time drifts by about 1/10 seconds every two minutes when just doing timeouts 
