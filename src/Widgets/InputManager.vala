@@ -66,9 +66,9 @@ public class InputManager {
 
     public void parse_and_update_time() {
         string[] smh = new string[3];
-        smh[0] = "";
-        smh[1] = "";
-        smh[2] = "";
+        smh[0] = "";  // seconds
+        smh[1] = "";  // minutes
+        smh[2] = "";  // hours
         int smhIndex = 0;
         
         for (int i = 0; i < inputString.length; i++) {
@@ -78,15 +78,10 @@ public class InputManager {
             }
             smh[smhIndex] = smh[smhIndex] + inputString.substring(i, 1);
         }
+
+        timer.set_input_time(int.parse(smh[2]), int.parse(smh[1]), int.parse(smh[0])); 
         
-        print(smh[2]);
-        print("h ");
-        print(smh[1]);
-        print("m ");
-        print(smh[0]);
-        print("s\n");
-        
-        var index = 0;
+        /*  var index = 0;
         //var displayString = new StringBuilder();
         var displayString = "";
         for (int i = 1; i <= inputString.length; i++) {
@@ -97,7 +92,7 @@ public class InputManager {
             }
             index++;
         }
-        timer.set_display_text(displayString);
+        timer.set_display_text(displayString);  */
 
     }
 

@@ -16,16 +16,15 @@ public class PTimer {
     private int update_interval = 1000;
     private bool repeat = false;
     private bool mute = false;
-    
-    // @temporary
-    public string t1 = "";
-    public string t2 = "";
-    private int64 storedTime = 0;
+    private int64 timerDuration = 0;
     private int64 startTime = 0;
+    private int64 endTime = 0;
+    private int hours = 0;
+    private int minutes = 0;
+    private int seconds = 0;
+    private string displayString = "";
 
     public PTimer(string t1, string t2, int colorset) {
-        this.t1 = t1;
-        this.t2 = t2;
 
 
         im = new InputManager(this);
@@ -54,9 +53,9 @@ public class PTimer {
         textView.set_size_request(150,300);
         textView.set_top_margin(90);
         textView.set_justification(Justification.CENTER);
-        textView.buffer.text = t1;
         textView.cursor_visible = false;
         textView.set_editable(false);
+        make_display_string();
 
         overlay.add(textView);
         overlay.add_overlay(ta);
@@ -86,6 +85,18 @@ public class PTimer {
         timerView.pack_start(settingsView, true, true, 10);
     }
 
+    public void set_input_time(int hours, int minutes, int seconds) {
+        this.hours = hours;
+        this.minutes = minutes;
+        this.seconds = seconds;
+
+        timerDuration = 0;
+        timerDuration += hours * 36 * (int64)Math.pow10(8);
+        timerDuration += minutes * 6 * (int64)Math.pow10(7);
+        timerDuration += seconds * (int64)Math.pow10(6);
+        make_display_string();
+    }
+
     public Box timer_view() {
         return this.timerView;
     }
@@ -104,8 +115,10 @@ public class PTimer {
     public void set_active() {
         if (active) return;
 
+        // this is starting a timer
         if (startTime == 0) {
             startTime = GLib.get_monotonic_time();
+            endTime = startTime + timerDuration;
         }
         active = true;
         Timeout.add(update_interval, update_time);
@@ -129,16 +142,61 @@ public class PTimer {
     public void toggle_mute() {
         volume_b.set_active(!volume_b.get_active());
     }
+
+
+    public void make_display_string() {
+        displayString = "";
+        if (hours <= 0) {
+            displayString += "0";
+        } else {
+            displayString += hours.to_string();
+        }
+        displayString += "h ";
+        if (minutes <= 0) {
+            displayString += "0";
+        } else {
+            displayString += minutes.to_string();
+        }
+        displayString += "m ";
+        if (seconds <= 0) {
+            displayString += "0";
+        } else {
+            displayString += seconds.to_string();
+        }
+        displayString += "s";
+        textView.buffer.text = displayString;
+    }
+
+    public void decrement_time() {
+        seconds--;
+        if (seconds < 0 && minutes > 0) {
+            seconds = 59;
+            minutes--;
+            if (minutes < 0 && hours > 0) {
+                minutes = 59;
+                hours--;
+                if (hours < 0) {
+                    hours = 0;
+                }
+            } else if (minutes < 0) {
+                minutes = 0;
+            }
+        }
+    }
     /*  
      time drifts by about 1/10 seconds every two minutes when just doing timeouts 
      */
     private bool update_time() {
         if (active) {
-            if (textView.buffer.text == t1) {
-                textView.buffer.text = t2;
+            decrement_time();
+            if (seconds > 0) {
+                make_display_string();
             } else {
-                textView.buffer.text = t1;
+                displayString = "DONE";
+                textView.buffer.text = displayString;
+                set_inactive();
             }
+            
         }
         return active;
     }

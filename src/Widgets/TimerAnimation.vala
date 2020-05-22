@@ -68,9 +68,9 @@ public class TimerAnimation : Gtk.Widget {
         
         double xc = 150.0;
         double yc = 125.0;
-        double radius = 105.0;
+        double radius = 120.0;
         
-        cr.set_line_width(10.0);
+        cr.set_line_width(12.0);
         cr.set_source_rgb(c0[0], c0[1], c0[2]);
         
         if (degree >= (-359 - switchDegree)) {
