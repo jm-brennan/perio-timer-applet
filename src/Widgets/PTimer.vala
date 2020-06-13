@@ -32,6 +32,7 @@ public class PTimer {
         
         overlay = new Overlay();
         overlay.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK);
+        overlay.set_size_request(150, 300);
         ta = new TimerAnimation(colorset);
         overlay.button_press_event.connect((e) => {
             this.toggle_active();
@@ -48,16 +49,19 @@ public class PTimer {
             print("LEFT");
             return true;
         });  */
-        
+    
+        var textViewBox = new Box(Orientation.VERTICAL, 0);
+        textViewBox.set_homogeneous(true);
         textView = new TextView();
-        textView.set_size_request(150,300);
-        textView.set_top_margin(90);
+        //textView.set_size_request(150,300);
+        //textView.set_top_margin(90);
         textView.set_justification(Justification.CENTER);
         textView.cursor_visible = false;
         textView.set_editable(false);
+        textViewBox.pack_start(textView, false, false, 0);
         make_display_string();
 
-        overlay.add(textView);
+        overlay.add(textViewBox);
         overlay.add_overlay(ta);
 
         timerView.pack_start(overlay, false, false, 0);

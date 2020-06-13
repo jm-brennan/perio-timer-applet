@@ -66,9 +66,9 @@ public class InputManager {
 
     public void parse_and_update_time() {
         string[] smh = new string[3];
-        smh[0] = "";  // seconds
-        smh[1] = "";  // minutes
-        smh[2] = "";  // hours
+        smh[0] = ""; // seconds
+        smh[1] = ""; // minutes
+        smh[2] = ""; // hours
         int smhIndex = 0;
         
         for (int i = 0; i < inputString.length; i++) {

@@ -23,7 +23,15 @@ public class Applet : Budgie.Applet {
                     letter-spacing: 3px;
                     font-size: 40px;
                 }
+                textview text {
+                    border-bottom-width: 5px;
+                    border-bottom-style: solid;
+                    border-bottom-color: #cd5334;
+                }
             """;
+/*              border-bottom-width: 5px;
+            border-bottom-style: solid;
+            border-bottom-color: #cd5334;  */
 
         var css_provider = new Gtk.CssProvider();
 
@@ -33,7 +41,7 @@ public class Applet : Budgie.Applet {
             warning ("Failed to parse css style : %s", e.message);
         }
 
-        Gtk.StyleContext.add_provider_for_screen (
+        Gtk.StyleContext.add_provider_for_screen(
                 Gdk.Screen.get_default (),
                 css_provider,
                 Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION

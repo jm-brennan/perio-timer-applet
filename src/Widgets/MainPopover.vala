@@ -69,7 +69,7 @@ namespace PatternTimer.Widgets {
             timers[0] = new PTimer("12:34", "12:33", 0);
             stack.add_titled(timers[0].timer_view(), currentTimer.to_string(), currentTimer.to_string());
 
-            mainView.pack_start(stack, false, false, 0);
+            mainView.pack_start(stack, false, false, 20);
             mainView.show_all();
             add(mainView);
         }

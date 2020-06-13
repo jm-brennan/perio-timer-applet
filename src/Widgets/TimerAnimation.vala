@@ -83,17 +83,6 @@ public class TimerAnimation : Gtk.Widget {
             cr.arc(xc, yc, radius, -90 * (Math.PI/180.0), degree * (Math.PI/180.0));
         }
         
-
-        //double t = double(GLib.get_monotonic_time());
-        //stdout.printf("%lld\n", t);
-        //int64 diff = (this.time - this.startTime);
-        //double perc = double(diff / timerLength);
-        //stdout.printf("%lld\n", diff);
-        //degree = -90 - (((this.time - this.startTime) / timerLength) * 360);
-        
-        //cr.arc(xc, yc, radius, 0, 180);
-        //cr.arc(xc, yc, radius, -90 * (Math.PI/180.0), degree * (Math.PI/180.0));
-        
         if (degree <= -450) {
             degree = -90;
         }
