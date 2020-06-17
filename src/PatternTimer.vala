@@ -24,7 +24,7 @@ public class Applet : Budgie.Applet {
                     font-size: 40px;
                 }
                 textview text {
-                    border-bottom-width: 5px;
+                    border-bottom-width: 3px;
                     border-bottom-style: solid;
                     border-bottom-color: #cd5334;
                 }
@@ -51,7 +51,7 @@ public class Applet : Budgie.Applet {
         Gtk.Image icon = new Gtk.Image.from_icon_name("alarm-symbolic", Gtk.IconSize.MENU);
         event_box.add(icon);
 
-        popover = new MainPopover(event_box);
+        popover = new MainPopover(event_box, 300, 300);
         this.add(event_box);
         this.show_all();
 

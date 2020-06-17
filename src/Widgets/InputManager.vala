@@ -19,20 +19,19 @@ public class InputManager {
     private PTimer? timer = null;
     private bool doSeconds = false;
 
-    private string seconds = "";
-    private string minutes = "";
-    private string hours = "";
-
     public InputManager(PTimer pt) {
         this.timer = pt;
     }
 
     public void send_key(uint keyval, string key) {
+        // if keyval is numeric, send to time string
+        // else process for keybindings
         if (keyval >= 48 && keyval <= 57) {
             if (inputString.length < allowedInputLength) {
                 inputString += key;
             }
         } else {
+            // set to lowercase
             if (keyval >= 65 && keyval <= 90) {
                 keyval += 32;
             }

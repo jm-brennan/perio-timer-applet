@@ -24,7 +24,11 @@ public class PTimer {
     private int seconds = 0;
     private string displayString = "";
 
-    public PTimer(string t1, string t2, int colorset) {
+
+    // figuring out the multi stage stuff
+    //private Stage[]
+
+    public PTimer(int width, int height, int colorset) {
 
 
         im = new InputManager(this);
@@ -32,8 +36,8 @@ public class PTimer {
         
         overlay = new Overlay();
         overlay.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK);
-        overlay.set_size_request(150, 300);
-        ta = new TimerAnimation(colorset);
+        overlay.set_size_request(width, height);
+        ta = new TimerAnimation(width, height, colorset);
         overlay.button_press_event.connect((e) => {
             this.toggle_active();
             return true;
@@ -50,20 +54,36 @@ public class PTimer {
             return true;
         });  */
     
-        var textViewBox = new Box(Orientation.VERTICAL, 0);
-        textViewBox.set_homogeneous(true);
+        // textview needs to be wrapped in center of a 3x3 box grid to get the 
+        // bottom border attribute to appear properly. Because it is added to an overlay,
+        // can't just pack_start with expand=false to get proper vertical alignment,
+        // and need empty widgets (just chose labels) to make left and right boundaries.
+        // There may be better ways to accomplish this, but I am a gtk novice.
+        var textViewBoxV = new Box(Orientation.VERTICAL, 0);
+        textViewBoxV.set_homogeneous(true);
+        var textViewBoxH = new Box(Orientation.HORIZONTAL, 0);
+        textViewBoxH.set_homogeneous(false);
+        var rlabel = new Label("");
+        var llabel = new Label("");
+
         textView = new TextView();
-        //textView.set_size_request(150,300);
-        //textView.set_top_margin(90);
         textView.set_justification(Justification.CENTER);
         textView.cursor_visible = false;
         textView.set_editable(false);
-        textViewBox.pack_start(textView, false, false, 0);
-        make_display_string();
+        
+        textViewBoxH.pack_start(llabel, false, false, 0);
+        textView.set_halign(Align.CENTER);
+        textView.set_valign(Align.CENTER);
+        // this needs the expand properties=true so that calling set_halign will matter
+        textViewBoxH.pack_start(textView, true, true, 0);
+        textViewBoxH.pack_start(rlabel, false, false, 0);
 
-        overlay.add(textViewBox);
+        textViewBoxV.pack_start(textViewBoxH, false, false, 0);
+        
+        overlay.add(textViewBoxV);
         overlay.add_overlay(ta);
-
+        make_display_string();
+        
         timerView.pack_start(overlay, false, false, 0);
         
         settingsView = new Box(Orientation.HORIZONTAL, 0);

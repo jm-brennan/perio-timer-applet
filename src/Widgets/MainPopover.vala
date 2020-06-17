@@ -13,9 +13,11 @@ namespace PatternTimer.Widgets {
         private PTimer[] timers = new PTimer[3];
         private int currentTimer = 0;
 
-        public MainPopover(Widget? window_parent) {
+        public MainPopover(Widget? window_parent, int width, int height) {
             Object(relative_to: window_parent);
-            this.set_size_request(300,200);
+            // dont think that the outer popover needs to set size requests,
+            // should just be determined by child elements? unclear
+            //this.set_size_request(width, height);
             add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK);
             add_events(Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK);
             
@@ -37,7 +39,7 @@ namespace PatternTimer.Widgets {
             mainView.set_homogeneous(false);
 
             header = new Box(Orientation.HORIZONTAL, 0);
-            header.height_request = 32;
+            header.height_request = 10;
             //Header.get_style_context().add_class("trash-applet-header");
             headerLabel = new Label("Timer!");
             
@@ -57,7 +59,7 @@ namespace PatternTimer.Widgets {
                         mainView.pack_start(ssBox, true, true, 0);
                         mainView.reorder_child(ssBox, 1);
                     }
-                    timers[currentTimer] = new PTimer("43:21", "43:22", 1);
+                    timers[currentTimer] = new PTimer(width, height, 1);
                     stack.add_titled(timers[currentTimer].timer_view(), currentTimer.to_string(), currentTimer.to_string());
                     mainView.show_all();
                     stack.set_visible_child_name(currentTimer.to_string());
@@ -66,7 +68,7 @@ namespace PatternTimer.Widgets {
             header.pack_end(headerNew_b, false, false, 0);
             mainView.pack_start(header, false, false, 0);
             
-            timers[0] = new PTimer("12:34", "12:33", 0);
+            timers[0] = new PTimer(width, height, 0);
             stack.add_titled(timers[0].timer_view(), currentTimer.to_string(), currentTimer.to_string());
 
             mainView.pack_start(stack, false, false, 20);

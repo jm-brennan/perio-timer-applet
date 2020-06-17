@@ -5,6 +5,9 @@ public class TimerAnimation : Gtk.Widget {
     private int64 degree = -90;
     private int64 timerLength = 30000000;
     private const int linewidth = 10;
+    private const int border = 15;
+    private int width;
+    private int height;
     private int64 time;
     private int64 startTime;
     private bool active = false;
@@ -15,8 +18,10 @@ public class TimerAnimation : Gtk.Widget {
     private double[] c1 = new double[3];
     private int switchDegree;
 
-    public TimerAnimation(int colorset) {
+    public TimerAnimation(int width, int height, int colorset) {
         set_has_window (false);
+        this.width = width;
+        this.height = height;
         startTime = GLib.get_monotonic_time();
 
         if (colorset == 0) {
@@ -66,10 +71,20 @@ public class TimerAnimation : Gtk.Widget {
             degree--;
         }
         
-        double xc = 150.0;
-        double yc = 125.0;
-        double radius = 120.0;
-        
+        double xc = width / 2;
+        double yc = height / 2;
+        double radius = (width / 2) - border;
+        /*  cr.set_source_rgb(1,1,1);
+        cr.set_line_width(1);
+        cr.rectangle(0,0, width, height);
+        cr.stroke();
+        cr.move_to(0,height / 2);
+        cr.line_to(width,height/2);
+        cr.stroke();
+        cr.move_to(width/2, 0);
+        cr.line_to(width/2, height);
+        cr.stroke();  */
+
         cr.set_line_width(12.0);
         cr.set_source_rgb(c0[0], c0[1], c0[2]);
         
