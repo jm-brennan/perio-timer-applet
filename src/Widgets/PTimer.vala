@@ -8,10 +8,6 @@ public class PTimer {
     private TextView? textView = null;
     private Box? timerView = null;
     private Box? settingsView = null;
-    private ToggleButton repeat_b = null;
-    private ToggleButton volume_b = null;
-    private Image volume_i = null;
-    private Image repeat_i = null;
     private bool active = false;
     private int update_interval = 1000;
     private bool repeat = false;
@@ -24,13 +20,31 @@ public class PTimer {
     private int seconds = 0;
     private string displayString = "";
 
+    // button setup for settings:
+    // repeat: default off
+    // notification: default on
+    // volume: default on
+    // TODO make defaults configurable in settings
+    private bool repeatStatus = false;
+    private Button repeatBut = null;
+    private Image repeatImOn = new Image.from_icon_name("media-playlist-consecutive-symbolic", IconSize.MENU);
+    private Image repeatImOff = new Image.from_icon_name("media-playlist-repeat-symbolic", IconSize.MENU);
+
+    private bool notificationStatus = true;
+    private Button notificationBut = null;
+    private Image notificationImOn = new Image.from_icon_name("notification-alert-symbolic", IconSize.MENU);
+    private Image notificationImOff = new Image.from_icon_name("notification-disabled-symbolic", IconSize.MENU);
+
+    private bool volumeStatus = true;
+    private Button volumeBut = null;
+    private Image volumeImOn = new Image.from_icon_name("audio-volume-high-symbolic", IconSize.MENU);
+    private Image volumeImOff = new Image.from_icon_name("audio-volume-muted-symbolic", IconSize.MENU);
+
 
     // figuring out the multi stage stuff
     //private Stage[]
 
     public PTimer(int width, int height, int colorset) {
-
-
         im = new InputManager(this);
         timerView = new Box(Orientation.VERTICAL, 0);
         
@@ -58,7 +72,7 @@ public class PTimer {
         // bottom border attribute to appear properly. Because it is added to an overlay,
         // can't just pack_start with expand=false to get proper vertical alignment,
         // and need empty widgets (just chose labels) to make left and right boundaries.
-        // There may be better ways to accomplish this, but I am a gtk novice.
+        // There may be better ways to accomplish this, but I am a gtk novice.  
         var textViewBoxV = new Box(Orientation.VERTICAL, 0);
         textViewBoxV.set_homogeneous(true);
         var textViewBoxH = new Box(Orientation.HORIZONTAL, 0);
@@ -83,29 +97,38 @@ public class PTimer {
         overlay.add(textViewBoxV);
         overlay.add_overlay(ta);
         make_display_string();
-        
         timerView.pack_start(overlay, false, false, 0);
         
         settingsView = new Box(Orientation.HORIZONTAL, 0);
-        repeat_b = new ToggleButton();
-        volume_b = new ToggleButton();
-        repeat_i = new Image.from_icon_name("media-playlist-repeat-symbolic", IconSize.MENU);
-        volume_i = new Image.from_icon_name("audio-volume-high-symbolic", IconSize.MENU);
-        repeat_b.set_image(repeat_i);
+
+        repeatBut = new Button();
+        repeatBut.set_image(repeatImOff);
+        repeatBut.clicked.connect(this.toggle_repeat);
+        settingsView.pack_start(repeatBut, true, false, 0);
+
+        volumeBut = new Button();
+        volumeBut.set_image(volumeImOn);
+        volumeBut.clicked.connect(this.toggle_volume);
+        settingsView.pack_start(volumeBut, true, false, 0);
+
+        notificationBut = new Button();
+        notificationBut.set_image(notificationImOn);
+        notificationBut.clicked.connect(this.toggle_notification);
+        settingsView.pack_start(notificationBut, true, false, 0);
+
+        /*  repeat_b.set_image(repeat_i);
         volume_b.set_image(volume_i);
         volume_b.toggled.connect(() => {
             if (volume_b.get_active() == true) {
                 //volume_image = new Image.from_file("/home/jacob/projects/code/pattern-timer/applet/style/manual-mute-symbolic.svg");
-                volume_i = new Image.from_icon_name("audio-volume-low-symbolic", IconSize.MENU);
+                volume_i = new Image.from_icon_name("audio-volume-low-symbolic", IconSize.LARGE_TOOLBAR);
                 volume_b.set_image(volume_i);
             } else {
-                volume_i = new Image.from_icon_name("audio-volume-high-symbolic", IconSize.MENU);
+                volume_i = new Image.from_icon_name("audio-volume-high-symbolic", IconSize.LARGE_TOOLBAR);
                 volume_b.set_image(volume_i);
             }
-        });
+        });  */
 
-        settingsView.pack_start(repeat_b, true, false, 0);
-        settingsView.pack_start(volume_b, true, false, 0);
         timerView.pack_start(settingsView, true, true, 10);
     }
 
@@ -160,13 +183,31 @@ public class PTimer {
     }
 
     public void toggle_repeat() {
-        repeat_b.set_active(!repeat_b.get_active());
+        if (repeatStatus) {
+            repeatBut.set_image(repeatImOff);
+        } else {
+            repeatBut.set_image(repeatImOn);
+        }
+        repeatStatus = !repeatStatus;
     }
 
-    public void toggle_mute() {
-        volume_b.set_active(!volume_b.get_active());
+    public void toggle_notification() {
+        if (notificationStatus) {
+            notificationBut.set_image(notificationImOff);
+        } else {
+            notificationBut.set_image(notificationImOn);
+        }
+        notificationStatus = !notificationStatus;
     }
 
+    public void toggle_volume() {
+        if (volumeStatus) {
+            volumeBut.set_image(volumeImOff);
+        } else {
+            volumeBut.set_image(volumeImOn);
+        }
+        volumeStatus = !volumeStatus;
+    }
 
     public void make_display_string() {
         displayString = "";

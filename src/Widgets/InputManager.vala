@@ -7,7 +7,11 @@ enum KeyCode {
     BACK = 65288,
     TAB = 65289,
     COLON = 58,
+
+    // these codes are for the lowercase version of these letters,
+    // the convention of capitalized enum values is confusing here
     M = 109,
+    N = 110,
     R = 114
 }
 
@@ -47,11 +51,14 @@ public class InputManager {
                         }
                     }
                     break;
+                case KeyCode.M:
+                    timer.toggle_volume();
+                    break;
+                case KeyCode.N:
+                    timer.toggle_notification();
+                    break;
                 case KeyCode.R:
                     timer.toggle_repeat();
-                    break;
-                case KeyCode.M:
-                    timer.toggle_mute();
                     break;
             }
         }

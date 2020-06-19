@@ -44,7 +44,7 @@ namespace PatternTimer.Widgets {
             headerLabel = new Label("Timer!");
             
             header.pack_start(headerLabel, true, true, 0);
-            headerNew_b = new Button.from_icon_name("tab-new-symbolic", IconSize.MENU);
+            headerNew_b = new Button.from_icon_name("list-add-symbolic", IconSize.MENU);
             headerNew_b.clicked.connect(() => {
                 if (currentTimer == 2) {
                     return;
