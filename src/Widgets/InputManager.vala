@@ -50,6 +50,7 @@ public class InputManager {
                             inputString = inputString.substring(0, allowedInputLength);
                         }
                     }
+                    timer.toggle_seconds();
                     break;
                 case KeyCode.M:
                     timer.toggle_volume();

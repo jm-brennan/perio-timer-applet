@@ -19,6 +19,7 @@ public class PTimer {
     private int minutes = 0;
     private int seconds = 0;
     private string displayString = "";
+    private bool doSeconds = false;
 
     // button setup for settings:
     // repeat: default off
@@ -27,8 +28,8 @@ public class PTimer {
     // TODO make defaults configurable in settings
     private bool repeatStatus = false;
     private Button repeatBut = null;
-    private Image repeatImOn = new Image.from_icon_name("media-playlist-consecutive-symbolic", IconSize.MENU);
-    private Image repeatImOff = new Image.from_icon_name("media-playlist-repeat-symbolic", IconSize.MENU);
+    private Image repeatImOn = new Image.from_icon_name("media-playlist-repeat-symbolic", IconSize.MENU);
+    private Image repeatImOff = new Image.from_icon_name("media-playlist-consecutive-symbolic", IconSize.MENU);
 
     private bool notificationStatus = true;
     private Button notificationBut = null;
@@ -41,12 +42,16 @@ public class PTimer {
     private Image volumeImOff = new Image.from_icon_name("audio-volume-muted-symbolic", IconSize.MENU);
 
 
+    // looking into hvaing a text box
+    public Entry te = null;
+
     // figuring out the multi stage stuff
     //private Stage[]
 
     public PTimer(int width, int height, int colorset) {
         im = new InputManager(this);
         timerView = new Box(Orientation.VERTICAL, 0);
+        timerView.set_focus_on_click(true);
         
         overlay = new Overlay();
         overlay.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK);
@@ -67,7 +72,7 @@ public class PTimer {
             print("LEFT");
             return true;
         });  */
-    
+
         // textview needs to be wrapped in center of a 3x3 box grid to get the 
         // bottom border attribute to appear properly. Because it is added to an overlay,
         // can't just pack_start with expand=false to get proper vertical alignment,
@@ -99,6 +104,10 @@ public class PTimer {
         make_display_string();
         timerView.pack_start(overlay, false, false, 0);
         
+        te = new Entry();
+        timerView.pack_start(te, false, false, 0);
+
+
         settingsView = new Box(Orientation.HORIZONTAL, 0);
 
         repeatBut = new Button();
@@ -115,19 +124,6 @@ public class PTimer {
         notificationBut.set_image(notificationImOn);
         notificationBut.clicked.connect(this.toggle_notification);
         settingsView.pack_start(notificationBut, true, false, 0);
-
-        /*  repeat_b.set_image(repeat_i);
-        volume_b.set_image(volume_i);
-        volume_b.toggled.connect(() => {
-            if (volume_b.get_active() == true) {
-                //volume_image = new Image.from_file("/home/jacob/projects/code/pattern-timer/applet/style/manual-mute-symbolic.svg");
-                volume_i = new Image.from_icon_name("audio-volume-low-symbolic", IconSize.LARGE_TOOLBAR);
-                volume_b.set_image(volume_i);
-            } else {
-                volume_i = new Image.from_icon_name("audio-volume-high-symbolic", IconSize.LARGE_TOOLBAR);
-                volume_b.set_image(volume_i);
-            }
-        });  */
 
         timerView.pack_start(settingsView, true, true, 10);
     }
@@ -182,6 +178,10 @@ public class PTimer {
         textView.buffer.text = newDisplay;
     }
 
+    public void toggle_seconds() {
+        doSeconds = !doSeconds;
+    }
+
     public void toggle_repeat() {
         if (repeatStatus) {
             repeatBut.set_image(repeatImOff);
@@ -211,24 +211,18 @@ public class PTimer {
 
     public void make_display_string() {
         displayString = "";
-        if (hours <= 0) {
-            displayString += "0";
-        } else {
-            displayString += hours.to_string();
-        }
+        displayString += hours.to_string();
         displayString += "h ";
-        if (minutes <= 0) {
-            displayString += "0";
-        } else {
-            displayString += minutes.to_string();
-        }
-        displayString += "m ";
-        if (seconds <= 0) {
-            displayString += "0";
-        } else {
+
+        displayString += minutes.to_string();
+        displayString += "m";
+
+        if (doSeconds) {
+            displayString += " ";
             displayString += seconds.to_string();
+            displayString += "s";
         }
-        displayString += "s";
+        
         textView.buffer.text = displayString;
     }
 

@@ -26,7 +26,7 @@ namespace PatternTimer.Widgets {
             stackSwitcher = new StackSwitcher();
             stackSwitcher.stack = stack;
             stackSwitcher.set_homogeneous(true);
-            stackSwitcher.set_halign(Align.CENTER);
+            //stackSwitcher.set_halign(Align.CENTER);
             stack.notify["visible-child"].connect(() => {
                 string visibleChildName = stack.get_visible_child_name();
                 if (visibleChildName == null) { // don't think this ever happens
@@ -79,6 +79,10 @@ namespace PatternTimer.Widgets {
         public override bool key_press_event (Gdk.EventKey event) {
             //print(event.keyval.to_string());
             //print("\n");
+            //print(this.get_focus());:
+            if (this.get_focus() == timers[currentTimer].te) {
+                print("text entry");
+            }
             switch (event.keyval) {
                 case KeyCode.ENTER:
                     timers[currentTimer].set_active();
