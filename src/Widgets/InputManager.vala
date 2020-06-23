@@ -33,6 +33,7 @@ public class InputManager {
         if (keyval >= 48 && keyval <= 57) {
             if (inputString.length < allowedInputLength) {
                 inputString += key;
+                parse_and_update_time();
             }
         } else {
             // set to lowercase
@@ -51,6 +52,7 @@ public class InputManager {
                         }
                     }
                     timer.toggle_seconds();
+                    parse_and_update_time();
                     break;
                 case KeyCode.M:
                     timer.toggle_volume();
@@ -63,7 +65,7 @@ public class InputManager {
                     break;
             }
         }
-        parse_and_update_time();
+        
     }
 
     public void backspace() {
