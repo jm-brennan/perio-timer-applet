@@ -33,7 +33,7 @@ public class InputManager {
         if (keyval >= 48 && keyval <= 57) {
             if (inputString.length < allowedInputLength) {
                 inputString += key;
-                parse_and_update_time();
+                timer.set_input_time(inputString);
             }
         } else {
             // set to lowercase
@@ -52,7 +52,7 @@ public class InputManager {
                         }
                     }
                     timer.toggle_seconds();
-                    parse_and_update_time();
+                    timer.set_input_time(inputString);
                     break;
                 case KeyCode.M:
                     timer.toggle_volume();
@@ -70,41 +70,8 @@ public class InputManager {
 
     public void backspace() {
         inputString = inputString.substring(0, inputString.length - 1);
-        parse_and_update_time();
+        timer.set_input_time(inputString);
     }
-
-    public void parse_and_update_time() {
-        string[] smh = new string[3];
-        smh[0] = ""; // seconds
-        smh[1] = ""; // minutes
-        smh[2] = ""; // hours
-        int smhIndex = 0;
-        
-        for (int i = 0; i < inputString.length; i++) {
-            smhIndex = (int)Math.floorf((inputString.length - 1 - i) / 2.0f);
-            if (!doSeconds) {
-                smhIndex += 1;
-            }
-            smh[smhIndex] = smh[smhIndex] + inputString.substring(i, 1);
-        }
-
-        timer.set_input_time(int.parse(smh[2]), int.parse(smh[1]), int.parse(smh[0])); 
-        
-        /*  var index = 0;
-        //var displayString = new StringBuilder();
-        var displayString = "";
-        for (int i = 1; i <= inputString.length; i++) {
-            string s = inputString.substring(index, 1);
-            displayString += s;
-            if (i % 2 == 0 && i < inputString.length) {
-                displayString += ":";
-            }
-            index++;
-        }
-        timer.set_display_text(displayString);  */
-
-    }
-
 }
 
 
