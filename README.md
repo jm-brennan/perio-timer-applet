@@ -1,1 +1,1 @@
-# pattern-timer
+# perio-timer
