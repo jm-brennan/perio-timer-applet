@@ -13,7 +13,7 @@ public class TimerAnimation : Gtk.Widget {
     private bool active = false;
     private int update_interval = 60;
     
-    // @temporary
+    // @TODO temporary way of doing colors
     private double[] c0 = new double[3];
     private double[] c1 = new double[3];
     private int switchDegree;
@@ -24,6 +24,7 @@ public class TimerAnimation : Gtk.Widget {
         this.height = height;
         startTime = GLib.get_monotonic_time();
 
+        // @TODO temporary way of doing colors
         if (colorset == 0) {
             c0[0] = 0.8;
             c0[1] = 0.324;
@@ -74,16 +75,6 @@ public class TimerAnimation : Gtk.Widget {
         double xc = width / 2;
         double yc = height / 2;
         double radius = (width / 2) - border;
-        /*  cr.set_source_rgb(1,1,1);
-        cr.set_line_width(1);
-        cr.rectangle(0,0, width, height);
-        cr.stroke();
-        cr.move_to(0,height / 2);
-        cr.line_to(width,height/2);
-        cr.stroke();
-        cr.move_to(width/2, 0);
-        cr.line_to(width/2, height);
-        cr.stroke();  */
 
         cr.set_line_width(12.0);
         cr.set_source_rgb(c0[0], c0[1], c0[2]);
@@ -91,6 +82,7 @@ public class TimerAnimation : Gtk.Widget {
         if (degree >= (-359 - switchDegree)) {
             cr.arc(xc, yc, radius, -1*switchDegree * (Math.PI/180.0), degree * (Math.PI/180.0));
             cr.stroke();
+
             cr.set_source_rgb(c1[0], c1[1], c1[2]);
             cr.arc(xc, yc, radius, -90 * (Math.PI/180.0), -1*switchDegree * (Math.PI/180.0));
         } else {
@@ -102,46 +94,12 @@ public class TimerAnimation : Gtk.Widget {
             degree = -90;
         }
         cr.stroke();
-
-        
         return true;
     }
     
-    // I think its fine to just get rid of this, ideally the actuall timer
-    // should just always be setting active or inactive
-    /*  public void toggle_active() { 
-        if (active) {
-            active = false;
-        } else {
-            active = true;
-            Timeout.add(update_interval, update);
-        }
-     }  */
-
     public void set_inactive() { active = false; }
 
     public void set_active() { active = true; Timeout.add(update_interval, update); }
 }
-}
 
-/*  
-    on_window_configure_event:
-        if size is different:
-            make new surface with new size
-            redraw current surface on it
-            set as current surface
-        update stored sizes
-
-
-    draw:
-        while(update_signal):
-            new, independent surface
-            draw on it
-
-
-    main:
-        make thread that waits on update signal
-        every 1/30 second:
-            if not currently drawing
-                send update
-*/
+} // end namespace

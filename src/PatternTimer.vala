@@ -1,5 +1,8 @@
+/*  
+    Creates the app as a budgie applet, just following all the same conventions/boilerplate
+    as the other applets that are shipped, specifically the Nightlight applet  
+*/
 using PatternTimer.Widgets;
-
 namespace PatternTimer {
 
 public class Plugin : Budgie.Plugin, Peas.ExtensionBase {
@@ -16,6 +19,10 @@ public class Applet : Budgie.Applet {
 
     public Applet(string uuid) {
         Object(uuid: uuid);
+
+        // "textview" handles the actual text, while "textview text" handles the appearance
+        // of the textview widget. It does not make sense but thats apparently just how gtk works.
+        // @TODO All css styling stuff should be more local
         var style = """
                 textview {
                     font-family: lato;
@@ -29,9 +36,6 @@ public class Applet : Budgie.Applet {
                     border-bottom-color: #cd5334;
                 }
             """;
-/*              border-bottom-width: 5px;
-            border-bottom-style: solid;
-            border-bottom-color: #cd5334;  */
 
         var css_provider = new Gtk.CssProvider();
 
@@ -55,6 +59,7 @@ public class Applet : Budgie.Applet {
         this.add(event_box);
         this.show_all();
 
+        // clicking on applet icon in panel opens main popover
         event_box.button_press_event.connect((e)=> {
             if (e.button == 1) {
                 if (popover.get_visible()) {
@@ -76,13 +81,10 @@ public class Applet : Budgie.Applet {
     }
 }
  
-} // End namespace
- 
- 
- 
+} // end namespace
+
 [ModuleInit]
-public void peas_register_types(TypeModule module)
-{
+public void peas_register_types(TypeModule module) {
     // boilerplate - all modules need this
     var objmodule = module as Peas.ObjectModule;
     objmodule.register_extension_type(typeof(Budgie.Plugin), typeof(PatternTimer.Plugin));

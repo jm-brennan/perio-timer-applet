@@ -19,9 +19,11 @@ public class PTimer {
     private int minutes = 0;
     private int seconds = 0;
     private string displayString = "";
+    string[] smh = new string[3];
     private bool doSeconds = false;
 
-    // button setup for settings:
+    // @TODO load defaults from settings
+    // button setup for timer behavior settings:
     // repeat: default off
     // notification: default on
     // volume: default on
@@ -42,25 +44,26 @@ public class PTimer {
     private Image volumeImOff = new Image.from_icon_name("audio-volume-muted-symbolic", IconSize.MENU);
 
 
-    // looking into hvaing a text box
+    // @TODO testing hvaing a text box, need to figure out input redirection
     public Entry te = null;
 
-    // figuring out the multi stage stuff
+    // @TODO figuring out the multi stage stuff
     //private Stage[]
 
     public PTimer(int width, int height, int colorset) {
         im = new InputManager(this);
         timerView = new Box(Orientation.VERTICAL, 0);
+        // @TODO input redirection
         timerView.set_focus_on_click(true);
         
         overlay = new Overlay();
         overlay.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK);
         overlay.set_size_request(width, height);
-        ta = new TimerAnimation(width, height, colorset);
         overlay.button_press_event.connect((e) => {
             this.toggle_active();
             return true;
         });
+        // @TODO implement dragging leading edge of animation with this
         /*  overlay.button_release_event.connect((e) => {
             print("RELEASE\n");
             print(e.x.to_string());
@@ -72,7 +75,7 @@ public class PTimer {
             print("LEFT");
             return true;
         });  */
-
+        
         // textview needs to be wrapped in center of a 3x3 box grid to get the 
         // bottom border attribute to appear properly. Because it is added to an overlay,
         // can't just pack_start with expand=false to get proper vertical alignment,
@@ -84,7 +87,7 @@ public class PTimer {
         textViewBoxH.set_homogeneous(false);
         var rlabel = new Label("");
         var llabel = new Label("");
-
+        
         textView = new TextView();
         textView.set_justification(Justification.CENTER);
         textView.cursor_visible = false;
@@ -96,10 +99,11 @@ public class PTimer {
         // this needs the expand properties=true so that calling set_halign will matter
         textViewBoxH.pack_start(textView, true, true, 0);
         textViewBoxH.pack_start(rlabel, false, false, 0);
-
+        
         textViewBoxV.pack_start(textViewBoxH, false, false, 0);
         
         overlay.add(textViewBoxV);
+        ta = new TimerAnimation(width, height, colorset);
         overlay.add_overlay(ta);
         make_display_string();
         timerView.pack_start(overlay, false, false, 0);
@@ -128,21 +132,34 @@ public class PTimer {
         timerView.pack_start(settingsView, true, true, 10);
     }
 
-    public void set_input_time(int hours, int minutes, int seconds) {
-        this.hours = hours;
-        this.minutes = minutes;
-        this.seconds = seconds;
-
-        timerDuration = 0;
-        timerDuration += hours * 36 * (int64)Math.pow10(8);
-        timerDuration += minutes * 6 * (int64)Math.pow10(7);
-        timerDuration += seconds * (int64)Math.pow10(6);
-        make_display_string();
+    public void set_input_time(string inputString) {
+        if (!active){
+            smh[0] = ""; // seconds
+            smh[1] = ""; // minutes
+            smh[2] = ""; // hours
+            int smhIndex = 0;
+            
+            for (int i = 0; i < inputString.length; i++) {
+                smhIndex = (int)Math.floorf((inputString.length - 1 - i) / 2.0f);
+                if (!doSeconds) {
+                    smhIndex += 1;
+                }
+                smh[smhIndex] = smh[smhIndex] + inputString.substring(i, 1);
+            }
+    
+            this.hours = int.parse(smh[2]);
+            this.minutes = int.parse(smh[1]);
+            this.seconds = int.parse(smh[0]);
+    
+            timerDuration = 0;
+            timerDuration += hours * 36 * (int64)Math.pow10(8);
+            timerDuration += minutes * 6 * (int64)Math.pow10(7);
+            timerDuration += seconds * (int64)Math.pow10(6);
+            make_display_string();
+        }
     }
 
-    public Box timer_view() {
-        return this.timerView;
-    }
+    public Box timer_view() { return this.timerView; }
 
     public void toggle_active(bool startable = false) {
         if (active) {
@@ -179,7 +196,9 @@ public class PTimer {
     }
 
     public void toggle_seconds() {
-        doSeconds = !doSeconds;
+        if (!active){
+            doSeconds = !doSeconds;
+        }
     }
 
     public void toggle_repeat() {
@@ -209,18 +228,29 @@ public class PTimer {
         volumeStatus = !volumeStatus;
     }
 
-    public void make_display_string() {
+    public void make_display_string(bool editing = true) {
         displayString = "";
-        displayString += hours.to_string();
-        displayString += "h ";
+        if (!active || hours > 0) {
+            displayString += hours.to_string();
+            displayString += "h";
+        }
 
-        displayString += minutes.to_string();
-        displayString += "m";
+        if (!active || minutes > 0 || hours > 0) {
+            if (!active || hours > 0) {
+                displayString += " ";
+            }
+            displayString += minutes.to_string();
+            displayString += "m";
+        }
 
-        if (doSeconds) {
-            displayString += " ";
-            displayString += seconds.to_string();
-            displayString += "s";
+        if (!active || seconds > 0 || minutes > 0 || hours > 0) {
+            if (doSeconds || active) {
+                if (!active || minutes > 0 || hours > 0) {
+                    displayString += " ";
+                }
+                displayString += seconds.to_string();
+                displayString += "s";
+            }
         }
         
         textView.buffer.text = displayString;
@@ -242,12 +272,12 @@ public class PTimer {
             }
         }
     }
-    /*  
-     time drifts by about 1/10 seconds every two minutes when just doing timeouts 
-     */
+     
+    // @TODO time drifts by about 1/10 seconds every two minutes when just doing timeouts
     private bool update_time() {
         if (active) {
             decrement_time();
+            //make_display_string();
             if (seconds > 0) {
                 make_display_string();
             } else {
@@ -262,5 +292,4 @@ public class PTimer {
 
 }
 
-
-}
+} // end namespace

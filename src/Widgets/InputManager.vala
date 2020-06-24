@@ -1,6 +1,7 @@
 using GLib;
 
 namespace PatternTimer.Widgets {
+
 enum KeyCode {
     ENTER = 65293,
     SPACE = 32,
@@ -17,7 +18,6 @@ enum KeyCode {
 
 
 public class InputManager {
-    //private string displayString = "";
     private string inputString = "";
     private int allowedInputLength = 4;
     private PTimer? timer = null;
@@ -27,7 +27,24 @@ public class InputManager {
         this.timer = pt;
     }
 
-    public void send_key(uint keyval, string key) {
+    public void keypress(Gdk.EventKey event) {
+        switch (event.keyval) {
+            case KeyCode.ENTER:
+                timer.set_active();
+                break;
+            case KeyCode.SPACE:
+                timer.toggle_active();
+                break;
+            case KeyCode.BACK:
+                backspace();
+                break;
+            default:
+                handle_regular_key(event.keyval, event.str);
+                break;
+        }
+    }
+
+    public void handle_regular_key(uint keyval, string key) {
         // if keyval is numeric, send to time string
         // else process for keybindings
         if (keyval >= 48 && keyval <= 57) {
@@ -36,10 +53,9 @@ public class InputManager {
                 timer.set_input_time(inputString);
             }
         } else {
-            // set to lowercase
-            if (keyval >= 65 && keyval <= 90) {
-                keyval += 32;
-            }
+            // set to lowercase ascii
+            if (keyval >= 65 && keyval <= 90) { keyval += 32; }
+
             switch (keyval) {
                 case KeyCode.COLON:
                     doSeconds = !doSeconds;
@@ -74,5 +90,4 @@ public class InputManager {
     }
 }
 
-
-}
+} // end namespace

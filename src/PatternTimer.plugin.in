@@ -1,7 +1,7 @@
 [Plugin]
 Module=libpatterntimer.so
 Name=Pattern Timer
-_Description=Repeatable Timer Tool 3
+_Description=Repeatable Timer Tool
 Authors=Jacob Brennan
 Copyright=Copyright © 2020 Jacob Brennan
 Website=https://getsol.us
