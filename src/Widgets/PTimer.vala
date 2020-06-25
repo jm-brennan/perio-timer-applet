@@ -1,6 +1,18 @@
 using Gtk;
 
-namespace PatternTimer.Widgets {
+namespace PerioTimer.Widgets {
+
+public struct Stage {
+    public int hours;
+    public int minutes;
+    public int seconds;
+    public int64 startTime;
+    public int64 timeLeft;
+    public float r;
+    public float g;
+    public float b;
+}
+
 public class PTimer {
     private Overlay? overlay = null;
     private TimerAnimation? ta = null;
@@ -10,14 +22,12 @@ public class PTimer {
     private Box? settingsView = null;
     private bool active = false;
     private int update_interval = 1000;
-    private bool repeat = false;
-    private bool mute = false;
-    private int64 timerDuration = 0;
-    private int64 startTime = 0;
-    private int64 endTime = 0;
-    private int hours = 0;
-    private int minutes = 0;
-    private int seconds = 0;
+    //private int64 timerDuration = 0;
+    //private int64 startTime = 0;
+    //private int64 endTime = 0;
+    //private int hours = 0;
+    //private int minutes = 0;
+    //private int seconds = 0;
     private string displayString = "";
     string[] smh = new string[3];
     private bool doSeconds = false;
@@ -27,7 +37,6 @@ public class PTimer {
     // repeat: default off
     // notification: default on
     // volume: default on
-    // TODO make defaults configurable in settings
     private bool repeatStatus = false;
     private Button repeatBut = null;
     private Image repeatImOn = new Image.from_icon_name("media-playlist-repeat-symbolic", IconSize.MENU);
@@ -48,7 +57,10 @@ public class PTimer {
     public Entry te = null;
 
     // @TODO figuring out the multi stage stuff
-    //private Stage[]
+    private const int MAX_STAGES = 4;
+    private Stage[] stages = new Stage[MAX_STAGES];
+    private int currentStage = 0;
+    private int numStages = 1;
 
     public PTimer(int width, int height, int colorset) {
         im = new InputManager(this);
@@ -146,17 +158,32 @@ public class PTimer {
                 }
                 smh[smhIndex] = smh[smhIndex] + inputString.substring(i, 1);
             }
-    
-            this.hours = int.parse(smh[2]);
-            this.minutes = int.parse(smh[1]);
-            this.seconds = int.parse(smh[0]);
-    
-            timerDuration = 0;
-            timerDuration += hours * 36 * (int64)Math.pow10(8);
-            timerDuration += minutes * 6 * (int64)Math.pow10(7);
-            timerDuration += seconds * (int64)Math.pow10(6);
+            
+            stages[currentStage].hours = int.parse(smh[2]);
+            stages[currentStage].minutes = int.parse(smh[1]);
+            stages[currentStage].seconds = int.parse(smh[0]);
+
             make_display_string();
         }
+    }
+
+    public void new_stage() {
+        if (numStages == MAX_STAGES) return;
+        print("new stage\n");
+
+        // @TODO make it so it can be added to middle of sequence (not linked list tho lol)
+        currentStage = numStages;
+        numStages++;
+
+        stages[currentStage] = {0,0,0,0,0,0.0f, 0.0f, 0.0f};
+    }
+
+    public void switch_stage(int switchDirection) {
+        currentStage += switchDirection;
+        // make sure only traversing defined stages
+        currentStage = int.max(0, currentStage);
+        currentStage = int.min(currentStage, numStages-1);
+        make_display_string();
     }
 
     public Box timer_view() { return this.timerView; }
@@ -167,19 +194,21 @@ public class PTimer {
         } else {
             // if this toggle call does not have start privileges
             // and timer hasn't been started, just return
-            if (!startable && startTime == 0) return;
+            if (!startable && stages[currentStage].startTime == 0) return;
             set_active();
         }
     }
 
     public void set_active() {
         if (active) return;
-
-        // this is starting a timer
-        if (startTime == 0) {
-            startTime = GLib.get_monotonic_time();
-            endTime = startTime + timerDuration;
+        
+        // starting a timer for the first time
+        if (stages[currentStage].startTime == 0) {
+            stages[currentStage].timeLeft += stages[currentStage].hours * 36 * (int64)Math.pow10(8);
+            stages[currentStage].timeLeft += stages[currentStage].minutes * 6 * (int64)Math.pow10(7);
+            stages[currentStage].timeLeft += stages[currentStage].seconds * (int64)Math.pow10(6);
         }
+        stages[currentStage].startTime = GLib.get_monotonic_time();
         active = true;
         Timeout.add(update_interval, update_time);
         ta.set_active();
@@ -187,12 +216,11 @@ public class PTimer {
 
     public void set_inactive() {
         if (!active) return;
+
+        stages[currentStage].timeLeft -= GLib.get_monotonic_time() - stages[currentStage].startTime;
+
         active = false;
         ta.set_inactive();
-    }
-
-    public void set_display_text(string newDisplay) {
-        textView.buffer.text = newDisplay;
     }
 
     public void toggle_seconds() {
@@ -229,6 +257,12 @@ public class PTimer {
     }
 
     public void make_display_string(bool editing = true) {
+        // @TODO decide whether it is a good idea to do this var thing or just access
+        // the data directly like in decrement_time 
+        int hours = stages[currentStage].hours;
+        int minutes = stages[currentStage].minutes;
+        int seconds = stages[currentStage].seconds;
+
         displayString = "";
         if (!active || hours > 0) {
             displayString += hours.to_string();
@@ -257,18 +291,18 @@ public class PTimer {
     }
 
     public void decrement_time() {
-        seconds--;
-        if (seconds < 0 && minutes > 0) {
-            seconds = 59;
-            minutes--;
-            if (minutes < 0 && hours > 0) {
-                minutes = 59;
-                hours--;
-                if (hours < 0) {
-                    hours = 0;
+        stages[currentStage].seconds--;
+        if (stages[currentStage].seconds < 0 && stages[currentStage].minutes > 0) {
+            stages[currentStage].seconds = 59;
+            stages[currentStage].minutes--;
+            if (stages[currentStage].minutes < 0 && stages[currentStage].hours > 0) {
+                stages[currentStage].minutes = 59;
+                stages[currentStage].hours--;
+                if (stages[currentStage].hours < 0) {
+                    stages[currentStage].hours = 0;
                 }
-            } else if (minutes < 0) {
-                minutes = 0;
+            } else if (stages[currentStage].minutes < 0) {
+                stages[currentStage].minutes = 0;
             }
         }
     }
@@ -278,7 +312,7 @@ public class PTimer {
         if (active) {
             decrement_time();
             //make_display_string();
-            if (seconds > 0) {
+            if (stages[currentStage].seconds > 0) {
                 make_display_string();
             } else {
                 displayString = "DONE";

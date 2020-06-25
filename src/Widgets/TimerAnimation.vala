@@ -1,9 +1,8 @@
 
-namespace PatternTimer.Widgets {
+namespace PerioTimer.Widgets {
 
 public class TimerAnimation : Gtk.Widget {
     private int64 degree = -90;
-    private int64 timerLength = 30000000;
     private const int linewidth = 10;
     private const int border = 15;
     private int width;

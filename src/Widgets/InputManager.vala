@@ -1,19 +1,18 @@
 using GLib;
 
-namespace PatternTimer.Widgets {
+namespace PerioTimer.Widgets {
 
 enum KeyCode {
+    RIGHT = 65363,
+    LEFT  = 65361,
     ENTER = 65293,
-    SPACE = 32,
-    BACK = 65288,
-    TAB = 65289,
+    TAB   = 65289,
+    BACK  = 65288,
     COLON = 58,
-
-    // these codes are for the lowercase version of these letters,
-    // the convention of capitalized enum values is confusing here
-    M = 109,
-    N = 110,
-    R = 114
+    SPACE = 32,
+    m = 109,
+    n = 110,
+    r = 114
 }
 
 
@@ -29,11 +28,20 @@ public class InputManager {
 
     public void keypress(Gdk.EventKey event) {
         switch (event.keyval) {
+            case KeyCode.RIGHT:
+                timer.switch_stage(1);
+                break;
+            case KeyCode.LEFT:
+                timer.switch_stage(-1);
+                break;
             case KeyCode.ENTER:
                 timer.set_active();
                 break;
             case KeyCode.SPACE:
                 timer.toggle_active();
+                break;
+            case KeyCode.TAB:
+                new_stage();
                 break;
             case KeyCode.BACK:
                 backspace();
@@ -44,7 +52,8 @@ public class InputManager {
         }
     }
 
-    public void handle_regular_key(uint keyval, string key) {
+    
+    private void handle_regular_key(uint keyval, string key) {
         // if keyval is numeric, send to time string
         // else process for keybindings
         if (keyval >= 48 && keyval <= 57) {
@@ -55,7 +64,7 @@ public class InputManager {
         } else {
             // set to lowercase ascii
             if (keyval >= 65 && keyval <= 90) { keyval += 32; }
-
+            
             switch (keyval) {
                 case KeyCode.COLON:
                     doSeconds = !doSeconds;
@@ -70,24 +79,30 @@ public class InputManager {
                     timer.toggle_seconds();
                     timer.set_input_time(inputString);
                     break;
-                case KeyCode.M:
+                case KeyCode.m:
                     timer.toggle_volume();
                     break;
-                case KeyCode.N:
+                case KeyCode.n:
                     timer.toggle_notification();
                     break;
-                case KeyCode.R:
+                case KeyCode.r:
                     timer.toggle_repeat();
                     break;
             }
         }
         
     }
-
-    public void backspace() {
+    
+    private void backspace() {
         inputString = inputString.substring(0, inputString.length - 1);
         timer.set_input_time(inputString);
     }
+
+    private void new_stage() {
+        timer.new_stage();
+        inputString = "";
+        timer.set_input_time(inputString);
+    } 
 }
 
 } // end namespace

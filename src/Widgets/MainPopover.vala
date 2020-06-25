@@ -1,6 +1,6 @@
 using Gtk;
 
-namespace PatternTimer.Widgets {
+namespace PerioTimer.Widgets {
 
 public class MainPopover : Budgie.Popover {
     private Stack? stack = null;
@@ -37,18 +37,16 @@ public class MainPopover : Budgie.Popover {
         header.pack_start(headerLabel, false, false, 0);
         headerNewButton = new Button.from_icon_name("list-add-symbolic", IconSize.MENU);
         headerNewButton.clicked.connect(() => {
-            if (numTimers == MAX_TIMERS) {
-                return;
-            } else {
-                timers[currentTimer].set_inactive();
-                currentTimer = numTimers;
-                numTimers++;
+            if (numTimers == MAX_TIMERS) return;
+            
+            timers[currentTimer].set_inactive();
+            currentTimer = numTimers;
+            numTimers++;
 
-                timers[currentTimer] = new PTimer(width, height, 1);
-                stack.add_titled(timers[currentTimer].timer_view(), currentTimer.to_string(), currentTimer.to_string());
-                mainView.show_all();
-                stack.set_visible_child_name(currentTimer.to_string());
-            }
+            timers[currentTimer] = new PTimer(width, height, 1);
+            stack.add_titled(timers[currentTimer].timer_view(), currentTimer.to_string(), currentTimer.to_string());
+            mainView.show_all();
+            stack.set_visible_child_name(currentTimer.to_string());
         });
         header.pack_end(headerNewButton, false, false, 0);
         mainView.pack_start(header, false, false, 0);

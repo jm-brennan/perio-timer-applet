@@ -2,8 +2,8 @@
     Creates the app as a budgie applet, just following all the same conventions/boilerplate
     as the other applets that are shipped, specifically the Nightlight applet  
 */
-using PatternTimer.Widgets;
-namespace PatternTimer {
+using PerioTimer.Widgets;
+namespace PerioTimer {
 
 public class Plugin : Budgie.Plugin, Peas.ExtensionBase {
     public Budgie.Applet get_panel_widget(string uuid) {
@@ -87,5 +87,5 @@ public class Applet : Budgie.Applet {
 public void peas_register_types(TypeModule module) {
     // boilerplate - all modules need this
     var objmodule = module as Peas.ObjectModule;
-    objmodule.register_extension_type(typeof(Budgie.Plugin), typeof(PatternTimer.Plugin));
+    objmodule.register_extension_type(typeof(Budgie.Plugin), typeof(PerioTimer.Plugin));
 }

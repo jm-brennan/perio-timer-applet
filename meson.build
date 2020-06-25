@@ -1,4 +1,4 @@
-project('pattern-timer',
+project('perio-timer',
         ['vala', 'c'],
         version: '0.1'
 )

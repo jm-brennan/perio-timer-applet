@@ -1,9 +1,9 @@
 gnome = import('gnome')
 
 custom_target(
-    'plugin-file-pattern-timer',
-    input: 'PatternTimer.plugin.in',
-    output: 'PatternTimer.plugin',
+    'plugin-file-perio-timer',
+    input: 'PerioTimer.plugin.in',
+    output: 'PerioTimer.plugin',
     command : [intltool, '--desktop-style', podir, '@INPUT@', '@OUTPUT@'],
     install: true,
     install_dir: APPLET_INSTALL_DIR
@@ -21,7 +21,7 @@ applet_deps = [
 ]
 
 applet_sources =[
-    'PatternTimer.vala',
+    'PerioTimerApplet.vala',
     'Widgets/PTimer.vala',
     'Widgets/MainPopover.vala',
     'Widgets/TimerAnimation.vala',
@@ -34,7 +34,7 @@ vala_args = [
 ]
 
 shared_library(
-    'patterntimer',
+    'periotimer',
     applet_sources,
     dependencies: applet_deps,
     vala_args: vala_args,
