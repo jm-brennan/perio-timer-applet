@@ -67,7 +67,7 @@ public class MainPopover : Budgie.Popover {
         });
 
         timers[0] = new PTimer(width, height, 0);
-        stack.add_titled(timers[0].timer_view(), currentTimer.to_string(), "Untitled Timer");
+        stack.add_titled(timers[0].timer_view(), currentTimer.to_string(), "Timer");
         mainView.pack_start(stackSwitcher, true, true, 0);
 
         mainView.pack_start(stack, false, false, 0);

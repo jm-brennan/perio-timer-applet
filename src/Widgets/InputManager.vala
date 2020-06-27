@@ -29,10 +29,10 @@ public class InputManager {
     public void keypress(Gdk.EventKey event) {
         switch (event.keyval) {
             case KeyCode.RIGHT:
-                timer.switch_stage(1);
+                timer.switch_stage_editing(1);
                 break;
             case KeyCode.LEFT:
-                timer.switch_stage(-1);
+                timer.switch_stage_editing(-1);
                 break;
             case KeyCode.ENTER:
                 timer.set_active();
@@ -52,7 +52,6 @@ public class InputManager {
         }
     }
 
-    
     private void handle_regular_key(uint keyval, string key) {
         // if keyval is numeric, send to time string
         // else process for keybindings

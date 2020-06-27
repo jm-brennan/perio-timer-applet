@@ -6,11 +6,15 @@ public struct Stage {
     public int hours;
     public int minutes;
     public int seconds;
+    public int hoursLeft;
+    public int minutesLeft;
+    public int secondsLeft;
     public int64 startTime;
     public int64 timeLeft;
     public float r;
     public float g;
     public float b;
+    public Label label;
 }
 
 public class PTimer {
@@ -19,15 +23,10 @@ public class PTimer {
     public InputManager? im = null;
     private TextView? textView = null;
     private Box? timerView = null;
+    private Box? stageLabels = null;
     private Box? settingsView = null;
     private bool active = false;
-    private int update_interval = 1000;
-    //private int64 timerDuration = 0;
-    //private int64 startTime = 0;
-    //private int64 endTime = 0;
-    //private int hours = 0;
-    //private int minutes = 0;
-    //private int seconds = 0;
+    private int updateInterval = 1000;
     private string displayString = "";
     string[] smh = new string[3];
     private bool doSeconds = false;
@@ -54,7 +53,7 @@ public class PTimer {
 
 
     // @TODO testing hvaing a text box, need to figure out input redirection
-    public Entry te = null;
+    // public Entry te = null;
 
     // @TODO figuring out the multi stage stuff
     private const int MAX_STAGES = 4;
@@ -92,7 +91,7 @@ public class PTimer {
         // bottom border attribute to appear properly. Because it is added to an overlay,
         // can't just pack_start with expand=false to get proper vertical alignment,
         // and need empty widgets (just chose labels) to make left and right boundaries.
-        // There may be better ways to accomplish this, but I am a gtk novice.  
+        // There may be better ways to accomplish this, but I am a gtk novice.
         var textViewBoxV = new Box(Orientation.VERTICAL, 0);
         textViewBoxV.set_homogeneous(true);
         var textViewBoxH = new Box(Orientation.HORIZONTAL, 0);
@@ -117,12 +116,18 @@ public class PTimer {
         overlay.add(textViewBoxV);
         ta = new TimerAnimation(width, height, colorset);
         overlay.add_overlay(ta);
-        make_display_string();
+        display_time_left();
         timerView.pack_start(overlay, false, false, 0);
         
-        te = new Entry();
-        timerView.pack_start(te, false, false, 0);
-
+        stageLabels = new Box(Orientation.HORIZONTAL, 0);
+        var placeholderLabel = new Label("");
+        stageLabels.pack_start(placeholderLabel, false, false, 5);
+        stageLabels.set_halign(Align.CENTER);
+        timerView.pack_start(stageLabels, true, true, 0);
+        
+        // @TODO text entry for timer names? gotta figure out input redirection
+        // te = new Entry();
+        // timerView.pack_start(te, false, false, 0);
 
         settingsView = new Box(Orientation.HORIZONTAL, 0);
 
@@ -160,10 +165,13 @@ public class PTimer {
             }
             
             stages[currentStage].hours = int.parse(smh[2]);
+            stages[currentStage].hoursLeft = stages[currentStage].hours;
             stages[currentStage].minutes = int.parse(smh[1]);
+            stages[currentStage].minutesLeft = stages[currentStage].minutes;
             stages[currentStage].seconds = int.parse(smh[0]);
+            stages[currentStage].secondsLeft = stages[currentStage].seconds;
 
-            make_display_string();
+            display_time_left();
         }
     }
 
@@ -171,19 +179,28 @@ public class PTimer {
         if (numStages == MAX_STAGES) return;
         print("new stage\n");
 
+        stages[currentStage].label = new Label(make_display_string(stages[currentStage].hours, stages[currentStage].minutes, stages[currentStage].seconds));
+        stageLabels.pack_start(stages[currentStage].label, false, false, 5);
+        timerView.show_all();
         // @TODO make it so it can be added to middle of sequence (not linked list tho lol)
         currentStage = numStages;
         numStages++;
 
-        stages[currentStage] = {0,0,0,0,0,0.0f, 0.0f, 0.0f};
+        stages[currentStage] = {0,0,0,0,0,0,0,0,0.0f, 0.0f, 0.0f, new Label(currentStage.to_string())};
+
     }
 
-    public void switch_stage(int switchDirection) {
-        currentStage += switchDirection;
-        // make sure only traversing defined stages
-        currentStage = int.max(0, currentStage);
-        currentStage = int.min(currentStage, numStages-1);
-        make_display_string();
+    public void switch_stage_editing(int switchDirection) {
+        if (!active) {
+            var prevStage = currentStage;
+            currentStage += switchDirection;
+            // don't walk off either end of defined stages
+            currentStage = int.max(0, currentStage);
+            currentStage = int.min(currentStage, numStages-1);
+            if (currentStage != prevStage) {
+                display_time_left();
+            }
+        }
     }
 
     public Box timer_view() { return this.timerView; }
@@ -210,7 +227,7 @@ public class PTimer {
         }
         stages[currentStage].startTime = GLib.get_monotonic_time();
         active = true;
-        Timeout.add(update_interval, update_time);
+        Timeout.add(updateInterval, update_time);
         ta.set_active();
     }
 
@@ -218,7 +235,6 @@ public class PTimer {
         if (!active) return;
 
         stages[currentStage].timeLeft -= GLib.get_monotonic_time() - stages[currentStage].startTime;
-
         active = false;
         ta.set_inactive();
     }
@@ -256,13 +272,19 @@ public class PTimer {
         volumeStatus = !volumeStatus;
     }
 
-    public void make_display_string(bool editing = true) {
-        // @TODO decide whether it is a good idea to do this var thing or just access
-        // the data directly like in decrement_time 
-        int hours = stages[currentStage].hours;
-        int minutes = stages[currentStage].minutes;
-        int seconds = stages[currentStage].seconds;
+    public void reset_stages() {
+        for (int i = 0; i < numStages; i++) {
+            stages[i].hoursLeft = stages[i].hours;
+            stages[i].minutesLeft = stages[i].minutes;
+            stages[i].secondsLeft = stages[i].seconds;
+        }
+    }
 
+    public void display_time_left() {
+        textView.buffer.text = make_display_string(stages[currentStage].hoursLeft, stages[currentStage].minutesLeft, stages[currentStage].secondsLeft);
+    }
+
+    public string make_display_string(int hours, int minutes, int seconds) {
         displayString = "";
         if (!active || hours > 0) {
             displayString += hours.to_string();
@@ -286,40 +308,77 @@ public class PTimer {
                 displayString += "s";
             }
         }
-        
+        if (displayString == "") {
+            displayString = "DONE";   
+        }
+
+        return displayString;
         textView.buffer.text = displayString;
     }
 
-    public void decrement_time() {
-        stages[currentStage].seconds--;
-        if (stages[currentStage].seconds < 0 && stages[currentStage].minutes > 0) {
-            stages[currentStage].seconds = 59;
-            stages[currentStage].minutes--;
-            if (stages[currentStage].minutes < 0 && stages[currentStage].hours > 0) {
-                stages[currentStage].minutes = 59;
-                stages[currentStage].hours--;
-                if (stages[currentStage].hours < 0) {
-                    stages[currentStage].hours = 0;
+    // @TODO time drifts by about 1/10 seconds every two minutes when just doing timeouts
+    public bool decrement_time() {
+        bool done = false;
+        stages[currentStage].secondsLeft--;
+        if (stages[currentStage].secondsLeft < 0) {
+            stages[currentStage].minutesLeft--;
+            if (stages[currentStage].minutesLeft < 0){
+                stages[currentStage].hoursLeft--;
+                if (stages[currentStage].hoursLeft < 0) {
+                    done = true;
+                    stages[currentStage].hoursLeft = 0;
                 }
-            } else if (stages[currentStage].minutes < 0) {
-                stages[currentStage].minutes = 0;
+                if (done) {
+                    stages[currentStage].minutesLeft = 0;
+                } else {
+                    stages[currentStage].minutesLeft = 59;
+                }
+            }
+
+            if (done) {
+                stages[currentStage].secondsLeft = 0;
+            } else {
+                stages[currentStage].secondsLeft = 59;
             }
         }
+        if (done) {
+            return false;
+        } else {
+            return true;
+        }
+
+        // @TODO run this every 10 or so calls to decrement_time to recalculate time left
+        // and adjust when to call the next timeout
+        /*  int64 tl = stages[currentStage].timeLeft;
+
+        var h = tl / 36 / (int64)Math.pow10(8);
+        tl -= h * 36 * (int64)Math.pow10(8);
+        
+        var m = tl / 6 / (int64)Math.pow10(7);
+        tl -= m * 6 * (int64)Math.pow10(7);
+        
+        var s = tl / (int64)Math.pow10(6);
+        tl -= s * (int64)Math.pow10(6);  */
     }
      
-    // @TODO time drifts by about 1/10 seconds every two minutes when just doing timeouts
+    
     private bool update_time() {
         if (active) {
-            decrement_time();
-            //make_display_string();
-            if (stages[currentStage].seconds > 0) {
-                make_display_string();
+            if (decrement_time()) {
+                display_time_left();
+            } else if (currentStage < numStages - 1) {
+                currentStage++;
+                display_time_left();
+                print("switch stages\n");
+            } else if (repeatStatus) {
+                currentStage = 0;
+                reset_stages();
+                display_time_left();
             } else {
-                displayString = "DONE";
-                textView.buffer.text = displayString;
+                print("true end\n");
+                display_time_left();
                 set_inactive();
             }
-            
         }
         return active;
     }
