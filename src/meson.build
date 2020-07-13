@@ -23,6 +23,7 @@ applet_deps = [
 applet_sources =[
     'PerioTimerApplet.vala',
     'Widgets/PTimer.vala',
+    'Widgets/Stage.vala',
     'Widgets/MainPopover.vala',
     'Widgets/TimerAnimation.vala',
     'Widgets/InputManager.vala'

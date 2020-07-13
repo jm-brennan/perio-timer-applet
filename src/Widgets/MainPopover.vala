@@ -3,7 +3,7 @@ using Gtk;
 namespace PerioTimer.Widgets {
 
 public class MainPopover : Budgie.Popover {
-    private Stack? stack = null;
+    private Stack? timerStack = null;
     private StackSwitcher? stackSwitcher = null;
     private Box? mainView = null;
     private Box? header = null;
@@ -23,6 +23,7 @@ public class MainPopover : Budgie.Popover {
 
         Object(relative_to: window_parent);
         this.set_resizable(false);
+        // need to intercept button presses for fancy animation
         add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK);
         add_events(Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK);
         
@@ -31,10 +32,10 @@ public class MainPopover : Budgie.Popover {
 
         header = new Box(Orientation.HORIZONTAL, 0);
         header.height_request = 10;
-        // @TODO decide on a name and styling
-        headerLabel = new Label("'Perio?' Timer!");
-        
-        header.pack_start(headerLabel, false, false, 0);
+        // @TODO style this
+        headerLabel = new Label("Perio Timer");
+        header.pack_start(headerLabel, false, false, 5);
+
         headerNewButton = new Button.from_icon_name("list-add-symbolic", IconSize.MENU);
         headerNewButton.clicked.connect(() => {
             if (numTimers == MAX_TIMERS) return;
@@ -43,6 +44,7 @@ public class MainPopover : Budgie.Popover {
             currentTimer = numTimers;
             numTimers++;
 
+            // @TODO make this less bad once new stack implemention is done
             timers[currentTimer] = new PTimer(width, height, 1);
             stack.add_titled(timers[currentTimer].timer_view(), currentTimer.to_string(), currentTimer.to_string());
             mainView.show_all();
