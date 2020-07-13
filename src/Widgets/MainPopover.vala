@@ -46,22 +46,22 @@ public class MainPopover : Budgie.Popover {
 
             // @TODO make this less bad once new stack implemention is done
             timers[currentTimer] = new PTimer(width, height, 1);
-            stack.add_titled(timers[currentTimer].timer_view(), currentTimer.to_string(), currentTimer.to_string());
+            timerStack.add_titled(timers[currentTimer].timer_view(), currentTimer.to_string(), currentTimer.to_string());
             mainView.show_all();
-            stack.set_visible_child_name(currentTimer.to_string());
+            timerStack.set_visible_child_name(currentTimer.to_string());
         });
         header.pack_end(headerNewButton, false, false, 0);
         mainView.pack_start(header, false, false, 0);
 
-        stack = new Stack();
-        stack.set_transition_type(StackTransitionType.SLIDE_LEFT_RIGHT);
+        timerStack = new Stack();
+        timerStack.set_transition_type(StackTransitionType.SLIDE_LEFT_RIGHT);
         stackSwitcher = new StackSwitcher();
-        stackSwitcher.stack = stack;
+        stackSwitcher.stack = timerStack;
         stackSwitcher.set_homogeneous(true);
-        stack.notify["visible-child"].connect(() => {
+        timerStack.notify["visible-child"].connect(() => {
             // @TODO this is a temporary way of naming the stacks/setting which one is 
             // visible, will be changed when new naming technique is decided/implemented
-            string visibleChildName = stack.get_visible_child_name();
+            string visibleChildName = timerStack.get_visible_child_name();
             if (visibleChildName == null) {
                 visibleChildName = "0";
             }
@@ -69,10 +69,10 @@ public class MainPopover : Budgie.Popover {
         });
 
         timers[0] = new PTimer(width, height, 0);
-        stack.add_titled(timers[0].timer_view(), currentTimer.to_string(), "Timer");
+        timerStack.add_titled(timers[0].timer_view(), currentTimer.to_string(), "Timer");
         mainView.pack_start(stackSwitcher, true, true, 0);
 
-        mainView.pack_start(stack, false, false, 0);
+        mainView.pack_start(timerStack, false, false, 0);
         mainView.show_all();
         add(mainView);
     }

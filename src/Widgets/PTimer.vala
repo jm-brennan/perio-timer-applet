@@ -114,19 +114,14 @@ public class PTimer {
     }
 
     public void set_input_time(string inputString) {
-        stdout.printf("adding input for stage %d\n", currentStage);
         stages[currentStage].set_smh(inputString);
     }
 
     public void new_stage() {
         if (numStages == MAX_STAGES) return;
-        print("new stage\n");
 
         stageLabels.pack_start(stages[currentStage].label, false, false, 5);
-        // @TODO can you cann show all on the smallest element?
-        //  /timerView.show_all();
         // @TODO make it so it can be added to middle of sequence (not linked list tho lol)
-        stdout.printf("new stage, was at %d,", currentStage);
         currentStage = numStages;
         numStages++;
         stdout.printf(" now at %d\n", currentStage);
@@ -134,23 +129,15 @@ public class PTimer {
         stages[currentStage] = new Stage();
         stageStack.add(stages[currentStage].get_view());
         timerView.show_all();
-        stdout.printf("setting stage %d visible\n", currentStage);
         stageStack.set_visible_child(stages[currentStage].get_view());
-        /*  stages[currentStage].but.clicked.connect(() => {
-            print("asdf");
-        });  */
-
     }
 
     public void switch_stage_editing(int switchDirection) {
         if (!stages[currentStage].active) {
-            stdout.printf("switch from %d ", currentStage);
             currentStage += switchDirection;
             // don't walk off either end of defined stages
             currentStage = int.max(0, currentStage);
             currentStage = int.min(currentStage, numStages-1);
-            stdout.printf("to %d\n", currentStage);
-            // @restructure need to switch stack here
             stageStack.set_visible_child(stages[currentStage].get_view());
         }
     }

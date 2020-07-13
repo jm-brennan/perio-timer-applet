@@ -35,7 +35,7 @@ public class InputManager {
                 timer.switch_stage_editing(-1);
                 break;
             case KeyCode.ENTER:
-                timer.start();
+                timer.set_active();
                 break;
             case KeyCode.SPACE:
                 timer.toggle_active();
