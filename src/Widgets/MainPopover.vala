@@ -34,12 +34,16 @@ public class MainPopover : Budgie.Popover {
         header.height_request = 10;
         // @TODO style this
         headerLabel = new Label("Perio Timer");
+        headerLabel.get_style_context().add_class("app_title");
         header.pack_start(headerLabel, false, false, 5);
 
         headerNewButton = new Button.from_icon_name("list-add-symbolic", IconSize.MENU);
         headerNewButton.clicked.connect(() => {
             if (numTimers == MAX_TIMERS) return;
-            
+            if (numTimers == 1) {
+                mainView.pack_start(stackSwitcher, true, true, 0);
+                mainView.reorder_child(stackSwitcher, 1);
+            }
             timers[currentTimer].set_inactive();
             currentTimer = numTimers;
             numTimers++;
@@ -70,7 +74,6 @@ public class MainPopover : Budgie.Popover {
 
         timers[0] = new PTimer(width, height, 0);
         timerStack.add_titled(timers[0].timer_view(), currentTimer.to_string(), "Timer");
-        mainView.pack_start(stackSwitcher, true, true, 0);
 
         mainView.pack_start(timerStack, false, false, 0);
         mainView.show_all();

@@ -30,6 +30,16 @@ public class Applet : Budgie.Applet {
                     letter-spacing: 3px;
                     font-size: 40px;
                 }
+                label.app_title {
+                    font-family: lato;
+                    font-size: 15px;
+                    opacity: 0.75;
+                }
+                label.stage_name {
+                    font-family: lato;
+                    font-size: 15px;
+                    opacity: 0.75;
+                }
                 textview.red text {
                     border-bottom-width: 3px;
                     border-bottom-style: solid;

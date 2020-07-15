@@ -20,18 +20,15 @@ public class PTimer {
     // repeat: default off
     // notification: default on
     // volume: default on
-    private bool repeatStatus = false;
-    private Button repeatBut = null;
+    private ToggleButton repeatBut = null;
     private Image repeatImOn = new Image.from_icon_name("media-playlist-repeat-symbolic", IconSize.MENU);
     private Image repeatImOff = new Image.from_icon_name("media-playlist-consecutive-symbolic", IconSize.MENU);
 
-    private bool notificationStatus = true;
-    private Button notificationBut = null;
+    private ToggleButton notificationBut = null;
     private Image notificationImOn = new Image.from_icon_name("notification-alert-symbolic", IconSize.MENU);
     private Image notificationImOff = new Image.from_icon_name("notification-disabled-symbolic", IconSize.MENU);
 
-    private bool volumeStatus = true;
-    private Button volumeBut = null;
+    private ToggleButton volumeBut = null;
     private Image volumeImOn = new Image.from_icon_name("audio-volume-high-symbolic", IconSize.MENU);
     private Image volumeImOff = new Image.from_icon_name("audio-volume-muted-symbolic", IconSize.MENU);
 
@@ -95,19 +92,37 @@ public class PTimer {
 
         settingsView = new Box(Orientation.HORIZONTAL, 0);
 
-        repeatBut = new Button();
+        repeatBut = new ToggleButton();
         repeatBut.set_image(repeatImOff);
-        repeatBut.clicked.connect(this.toggle_repeat);
+        repeatBut.clicked.connect(() => {
+            if (repeatBut.get_active()) {
+                repeatBut.set_image(repeatImOn);
+            } else {
+                repeatBut.set_image(repeatImOff);
+            }
+        });
         settingsView.pack_start(repeatBut, true, false, 0);
 
-        volumeBut = new Button();
+        volumeBut = new ToggleButton();
         volumeBut.set_image(volumeImOn);
-        volumeBut.clicked.connect(this.toggle_volume);
+        volumeBut.clicked.connect(() => {
+            if (volumeBut.get_active()) {
+                volumeBut.set_image(volumeImOn);
+            } else {
+                volumeBut.set_image(volumeImOff);
+            }
+        });
         settingsView.pack_start(volumeBut, true, false, 0);
 
-        notificationBut = new Button();
+        notificationBut = new ToggleButton();
         notificationBut.set_image(notificationImOn);
-        notificationBut.clicked.connect(this.toggle_notification);
+        notificationBut.clicked.connect(() => {
+            if (notificationBut.get_active()) {
+                notificationBut.set_image(notificationImOn);
+            } else {
+                notificationBut.set_image(notificationImOff);
+            }
+        });
         settingsView.pack_start(notificationBut, true, false, 0);
 
         timerView.pack_start(settingsView, true, true, 10);
@@ -211,32 +226,11 @@ public class PTimer {
         }
     }
 
-    public void toggle_repeat() {
-        if (repeatStatus) {
-            repeatBut.set_image(repeatImOff);
-        } else {
-            repeatBut.set_image(repeatImOn);
-        }
-        repeatStatus = !repeatStatus;
-    }
+    public void toggle_repeat() { repeatBut.set_active(!repeatBut.get_active()); }
 
-    public void toggle_notification() {
-        if (notificationStatus) {
-            notificationBut.set_image(notificationImOff);
-        } else {
-            notificationBut.set_image(notificationImOn);
-        }
-        notificationStatus = !notificationStatus;
-    }
+    public void toggle_notification() { notificationBut.set_active(!notificationBut.get_active()); }
 
-    public void toggle_volume() {
-        if (volumeStatus) {
-            volumeBut.set_image(volumeImOff);
-        } else {
-            volumeBut.set_image(volumeImOn);
-        }
-        volumeStatus = !volumeStatus;
-    }
+    public void toggle_volume() { volumeBut.set_active(!volumeBut.get_active()); }
 
     public void reset_stages() {
         for (int i = 0; i < numStages; i++) {
@@ -260,7 +254,7 @@ public class PTimer {
                 //@restructure change stack display
                 stages[currentStage].set_active();
                 print("switch stages\n");
-            } else if (repeatStatus) {
+            } else if (repeatBut.get_active()) {
                 currentStage = 0;
                 reset_stages();
                 // @TODO add some buffer time while restarting?
