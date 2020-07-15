@@ -41,6 +41,7 @@ public class PTimer {
     private Stage[] stages = new Stage[MAX_STAGES];
     private int currentStage = 0;
     private int numStages = 1;
+    private Label? placeholderLabel = null;
 
     public PTimer(int width, int height, int colorset) {
         im = new InputManager(this);
@@ -81,7 +82,7 @@ public class PTimer {
         timerView.pack_start(overlay, false, false, 0);
         
         stageLabels = new Box(Orientation.HORIZONTAL, 0);
-        var placeholderLabel = new Label("");
+        placeholderLabel = new Label("");
         stageLabels.pack_start(placeholderLabel, false, false, 5);
         stageLabels.set_halign(Align.CENTER);
         timerView.pack_start(stageLabels, true, true, 0);
@@ -134,6 +135,11 @@ public class PTimer {
 
     public void new_stage() {
         if (numStages == MAX_STAGES) return;
+        if (numStages == 1) {
+            stageLabels.remove(placeholderLabel);
+        } else if (numStages > 1) {
+            stageLabels.pack_start(new Label("\u2022"), false, false, 2);
+        }
 
         stageLabels.pack_start(stages[currentStage].label, false, false, 5);
         // @TODO make it so it can be added to middle of sequence (not linked list tho lol)
