@@ -30,10 +30,25 @@ public class Applet : Budgie.Applet {
                     letter-spacing: 3px;
                     font-size: 40px;
                 }
-                textview text {
+                textview.red text {
                     border-bottom-width: 3px;
                     border-bottom-style: solid;
-                    border-bottom-color: #cd5334;
+                    border-bottom-color: #F25F5C;
+                }
+                textview.seagreen text {
+                    border-bottom-width: 3px;
+                    border-bottom-style: solid;
+                    border-bottom-color: #00FDDC;
+                }
+                textview.yellow text {
+                    border-bottom-width: 3px;
+                    border-bottom-style: solid;
+                    border-bottom-color: #FFE066;
+                }
+                textview.greensheen text {
+                    border-bottom-width: 3px;
+                    border-bottom-style: solid;
+                    border-bottom-color: #70C1B3;
                 }
             """;
 

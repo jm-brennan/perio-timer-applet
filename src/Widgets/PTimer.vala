@@ -72,7 +72,7 @@ public class PTimer {
         });  */
         
         
-        stages[0] = new Stage();
+        stages[0] = new Stage(0);
         stageStack = new Stack();
         stageStack.set_transition_type(StackTransitionType.SLIDE_LEFT_RIGHT);
         stageStack.add(stages[0].get_view());
@@ -124,9 +124,8 @@ public class PTimer {
         // @TODO make it so it can be added to middle of sequence (not linked list tho lol)
         currentStage = numStages;
         numStages++;
-        stdout.printf(" now at %d\n", currentStage);
 
-        stages[currentStage] = new Stage();
+        stages[currentStage] = new Stage(currentStage);
         stageStack.add(stages[currentStage].get_view());
         timerView.show_all();
         stageStack.set_visible_child(stages[currentStage].get_view());
@@ -144,42 +143,71 @@ public class PTimer {
 
     public Box timer_view() { return this.timerView; }
 
-    public void toggle_active(bool startable = false) {
+    public void start() {
+        if (!stages[currentStage].active) {
+            // @TODO do we want this to be able to happen at other times?
+            if (currentStage == numStages - 1) {
+                stageLabels.pack_start(stages[currentStage].label, false, false, 5);
+                timerView.show_all();
+            }
+            currentStage = 0;
+            stageStack.set_visible_child(stages[currentStage].get_view());
+            started = true;
+            set_active();
+        }
+        
+    }
+
+    public void toggle_active() {
         if (stages[currentStage].active) {
+            set_inactive();
+        } else if (started) {
+            set_active();
+        }
+        
+        /*  if (stages[currentStage].active) {
             stages[currentStage].set_inactive();
         } else {
             // if this toggle call does not have start privileges
             // and timer hasn't been started, just return
             if (!startable && stages[currentStage].startTime == 0) return;
             stages[currentStage].set_active();
-        }
+        }  */
     }
 
     public void set_active() {
-        if (!stages[currentStage].active) {
-            if (!started) {
-                currentStage = 0;
-                stageStack.set_visible_child(stages[currentStage].get_view());
+        if (started) {
+            if (!stages[currentStage].active) {
+                Timeout.add(updateInterval, update_time);
             }
             stages[currentStage].set_active();
             ta.set_active();
-            Timeout.add(updateInterval, update_time);
         }
+        
+        /*  if (!stages[currentStage].active) {
+            
+            
+        }  */
     }
 
     public void set_inactive() {
-        if (stages[currentStage].active) {
+        if (started) {
             stages[currentStage].set_inactive();
             ta.set_inactive();
         }
+        /*  if (stages[currentStage].active) {
+            
+        }  */
     }
 
     public void toggle_seconds() {
         // have to toggle doSeconds on all of them and update their text values
         // so that it will be correct when switching to view other stages
-        for (int i = 0; i < numStages; i++) {
-            stages[i].doSeconds = !stages[i].doSeconds;
-            stages[i].update_display();
+        if (!stages[currentStage].active){
+            for (int i = 0; i < numStages; i++) {
+                stages[i].doSeconds = !stages[i].doSeconds;
+                stages[i].update_display();
+            }
         }
     }
 
@@ -222,8 +250,8 @@ public class PTimer {
      
     
     private bool update_time() {
-        if (!stages[currentStage].active) {
-            bool stageFinished = !stages[currentStage].decrement_time();
+        if (stages[currentStage].active) {
+            bool stageFinished = stages[currentStage].decrement_time();
             if (!stageFinished) { return stages[currentStage].active; }
             
             if (currentStage < numStages - 1) {
