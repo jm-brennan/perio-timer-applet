@@ -23,8 +23,8 @@ public class InputManager {
     private PTimer? timer = null;
     private bool doSeconds = false;
 
-    public InputManager(PTimer pt) {
-        this.timer = pt;
+    public InputManager(PTimer* pt) {
+        this.timer = (PTimer)pt;
     }
 
     public void keypress(Gdk.EventKey event) {

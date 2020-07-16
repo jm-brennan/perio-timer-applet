@@ -70,7 +70,7 @@ public class PTimer {
         });  */
         
         
-        stages[0] = new Stage(0);
+        stages[0] = new Stage(0, doSeconds);
         stageStack = new Stack();
         stageStack.set_transition_type(StackTransitionType.SLIDE_LEFT_RIGHT);
         stageStack.add(stages[0].get_view());
@@ -106,7 +106,7 @@ public class PTimer {
         settingsView.pack_start(repeatBut, true, false, 0);
 
         volumeBut = new ToggleButton();
-        volumeBut.set_image(volumeImOn);
+        volumeBut.set_image(volumeImOff);
         volumeBut.clicked.connect(() => {
             if (volumeBut.get_active()) {
                 volumeBut.set_image(volumeImOn);
@@ -117,7 +117,7 @@ public class PTimer {
         settingsView.pack_start(volumeBut, true, false, 0);
 
         notificationBut = new ToggleButton();
-        notificationBut.set_image(notificationImOn);
+        notificationBut.set_image(notificationImOff);
         notificationBut.clicked.connect(() => {
             if (notificationBut.get_active()) {
                 notificationBut.set_image(notificationImOn);
@@ -148,7 +148,7 @@ public class PTimer {
         currentStage = numStages;
         numStages++;
 
-        stages[currentStage] = new Stage(currentStage);
+        stages[currentStage] = new Stage(currentStage, doSeconds);
         stageStack.add(stages[currentStage].get_view());
         timerView.show_all();
         stageStack.set_visible_child(stages[currentStage].get_view());
@@ -229,9 +229,10 @@ public class PTimer {
     public void toggle_seconds() {
         // have to toggle doSeconds on all of them and update their text values
         // so that it will be correct when switching to view other stages
+        doSeconds = !doSeconds;
         if (!stages[currentStage].active){
             for (int i = 0; i < numStages; i++) {
-                stages[i].doSeconds = !stages[i].doSeconds;
+                stages[i].doSeconds = doSeconds;
                 stages[i].update_display();
             }
         }

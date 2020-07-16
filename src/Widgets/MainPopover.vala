@@ -50,7 +50,7 @@ public class MainPopover : Budgie.Popover {
 
             // @TODO make this less bad once new stack implemention is done
             timers[currentTimer] = new PTimer(width, height, 1);
-            timerStack.add_titled(timers[currentTimer].timer_view(), currentTimer.to_string(), currentTimer.to_string());
+            timerStack.add_titled(timers[currentTimer].timer_view(), currentTimer.to_string(), "Timer " + currentTimer.to_string());
             mainView.show_all();
             timerStack.set_visible_child_name(currentTimer.to_string());
         });
@@ -73,7 +73,7 @@ public class MainPopover : Budgie.Popover {
         });
 
         timers[0] = new PTimer(width, height, 0);
-        timerStack.add_titled(timers[0].timer_view(), currentTimer.to_string(), "Timer");
+        timerStack.add_titled(timers[0].timer_view(), currentTimer.to_string(), "Timer 0");
 
         mainView.pack_start(timerStack, false, false, 0);
         mainView.show_all();
