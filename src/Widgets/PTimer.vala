@@ -77,7 +77,8 @@ public class PTimer {
         stageStack.set_visible_child(stages[0].get_view());
         overlay.add(stageStack);
 
-        ta = new TimerAnimation(width, height, colorset);
+        Stage* stagePtr = stages;
+        ta = new TimerAnimation(width, height, colorset, stagePtr);
         overlay.add_overlay(ta);
         timerView.pack_start(overlay, false, false, 0);
         
@@ -131,6 +132,7 @@ public class PTimer {
 
     public void set_input_time(string inputString) {
         stages[currentStage].set_smh(inputString);
+        ta.update_stages(numStages);
     }
 
     public void new_stage() {
@@ -168,6 +170,9 @@ public class PTimer {
         if (!stages[currentStage].active) {
             // @TODO do we want this to be able to happen at other times?
             if (currentStage == numStages - 1) {
+                if (numStages > 1) {
+                    stageLabels.pack_start(new Label("\u2022"), false, false, 2);
+                }
                 stageLabels.pack_start(stages[currentStage].label, false, false, 5);
                 timerView.show_all();
             }
