@@ -11,7 +11,7 @@ public class PTimer {
     private Box? stageLabels = null;
     private Box? settingsView = null;
     private bool started = false;
-    private int updateInterval = 1000;
+    private int updateInterval = 1;
     
     private bool doSeconds = false;
 
@@ -253,9 +253,18 @@ public class PTimer {
     
     private bool update_time() {
         if (stages[currentStage].active) {
-            bool stageFinished = stages[currentStage].decrement_time();
-            if (!stageFinished) { return stages[currentStage].active; }
-            
+            updateInterval = stages[currentStage].update_time();
+            stdout.printf("new update interval: %d\n", updateInterval);
+            //stdout.printf("\n");
+            stages[currentStage].update_display();
+
+            if (updateInterval != -1) { 
+                Timeout.add(updateInterval, update_time);
+                return false;
+            }
+
+            stages[currentStage].set_inactive();
+
             if (currentStage < numStages - 1) {
                 currentStage++;
                 // @TODO add some buffer time when switching to next stage?
@@ -267,10 +276,6 @@ public class PTimer {
                 reset_stages();
                 // @TODO add some buffer time while restarting?
                 stages[currentStage].set_active();
-            } else {
-                print("true end\n");
-                stages[currentStage].update_display();
-                stages[currentStage].set_inactive();
             }
         }
         return stages[currentStage].active;
