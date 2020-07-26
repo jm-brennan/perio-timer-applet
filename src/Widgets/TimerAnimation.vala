@@ -65,13 +65,13 @@ public class TimerAnimation : Gtk.Widget {
     }
 
     public override bool draw(Cairo.Context cr) {     
-        //stdout.printf("draw\n");   
         int xc = width / 2;
         int yc = height / 2;
         int radius = (width / 2) - border;
         cr.set_line_width(12.0);
 
-        if (totalTime == 0 && !active) { // when nothing has been entered, draw full circle
+        if (totalTime == 0 && !active) {
+            // when nothing has been entered, draw full circle
             cr.set_source_rgb(colors[0].r, colors[0].g, colors[0].b);
             cr.arc(xc, yc, radius, -90 * Math.PI/180.0, 270 * Math.PI/180.0);
             cr.stroke();
@@ -111,12 +111,14 @@ public class TimerAnimation : Gtk.Widget {
         for (int i = 0; i < numStages; i++) {
             degreesPastLastUpdate[i] = 0;
         }   
-        active = false; 
+        active = false;
+        redraw_canvas();
     }
 
     public void set_active() {  
         if (active) return;
-        active = true; 
+        active = true;
+        redraw_canvas();
         Timeout.add(update_interval, update); 
     }
 }

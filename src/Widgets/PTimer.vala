@@ -11,6 +11,7 @@ public class PTimer {
     private Box? stageLabels = null;
     private Box? settingsView = null;
     private bool started = false;
+    private bool restarted = false;
     private int updateInterval = 10;
     private int timeToRepeat = 2000;
     private int timeToSwitchStage = 2000;
@@ -158,17 +159,18 @@ public class PTimer {
             // don't walk off either end of defined stages
             currentStage = int.max(0, currentStage);
             currentStage = int.min(currentStage, numStages-1);
+            im.set_inputString(stages[currentStage].inputString);
             stageStack.set_visible_child(stages[currentStage].get_view());
         }
     }
 
     public Box timer_view() { return this.timerView; }
 
-    public void start(bool repeat = false) {
+    public void start() {
         if (started) return;
 
-        if (!stages[currentStage].active && !repeat) {
-            if (currentStage == numStages - 1) {
+        if (!stages[currentStage].active) {
+            if (currentStage == numStages - 1 && !restarted) {
                 if (numStages > 1) {
                     stageLabels.pack_start(new Label("\u2022"), false, false, 5);
                 }
@@ -230,6 +232,7 @@ public class PTimer {
 
     public void reset_timer() {
         started = false;
+        restarted = true;
         for (int i = 0; i < numStages; i++) {
             stages[i].reset();
         }
@@ -254,12 +257,11 @@ public class PTimer {
         } else {
             // timer has ended, now decide between switching stages, repeating timer,
             // or coming to true end
-
             set_inactive();
 
             if (currentStage < numStages - 1) {
-                // increment before timeout so that if play can be pressed before the timeout
-                // executes and itll work properly
+                // increment before timeout so that play can be pressed before the timeout
+                // executes and it'll work properly
                 currentStage++;
                 Timeout.add(timeToSwitchStage, () => {
                     set_active();

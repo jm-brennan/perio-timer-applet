@@ -106,6 +106,8 @@ public class InputManager {
         inputString = "";
         //timer.set_input_time(inputString);
     } 
+
+    public void set_inputString(string inputString) { this.inputString = inputString; }
 }
 
 } // end namespace
