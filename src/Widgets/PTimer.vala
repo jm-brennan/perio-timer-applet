@@ -11,7 +11,8 @@ public class PTimer {
     private Box? stageLabels = null;
     private Box? settingsView = null;
     private bool started = false;
-    private int updateInterval = 1;
+    private int updateInterval = 0;
+    private int timeToRepeat = 2000;
     
     private bool doSeconds = false;
 
@@ -162,9 +163,10 @@ public class PTimer {
 
     public Box timer_view() { return this.timerView; }
 
-    public void start() {
-        if (!stages[currentStage].active) {
-            // @TODO do we want this to be able to happen at other times?
+    public void start(bool repeat = false) {
+        if (started) return;
+
+        if (!stages[currentStage].active && !repeat) {
             if (currentStage == numStages - 1) {
                 if (numStages > 1) {
                     stageLabels.pack_start(new Label("\u2022"), false, false, 5);
@@ -177,7 +179,6 @@ public class PTimer {
             started = true;
             set_active();
         }
-        
     }
 
     public void toggle_active() {
@@ -186,30 +187,16 @@ public class PTimer {
         } else if (started) {
             set_active();
         }
-        
-        /*  if (stages[currentStage].active) {
-            stages[currentStage].set_inactive();
-        } else {
-            // if this toggle call does not have start privileges
-            // and timer hasn't been started, just return
-            if (!startable && stages[currentStage].startTime == 0) return;
-            stages[currentStage].set_active();
-        }  */
     }
 
     public void set_active() {
         if (started) {
             if (!stages[currentStage].active) {
-                Timeout.add(updateInterval, update_time);
+                Timeout.add(0, update_time);
             }
             stages[currentStage].set_active();
             ta.set_active();
         }
-        
-        /*  if (!stages[currentStage].active) {
-            
-            
-        }  */
     }
 
     public void set_inactive() {
@@ -217,9 +204,6 @@ public class PTimer {
             stages[currentStage].set_inactive();
             ta.set_inactive();
         }
-        /*  if (stages[currentStage].active) {
-            
-        }  */
     }
 
     public void toggle_seconds() {
@@ -240,7 +224,8 @@ public class PTimer {
 
     public void toggle_volume() { volumeBut.set_active(!volumeBut.get_active()); }
 
-    public void reset_stages() {
+    public void reset_timer() {
+        started = false;
         for (int i = 0; i < numStages; i++) {
             stages[i].reset();
         }
@@ -254,29 +239,32 @@ public class PTimer {
     private bool update_time() {
         if (stages[currentStage].active) {
             updateInterval = stages[currentStage].update_time();
-            stdout.printf("new update interval: %d\n", updateInterval);
+            //stdout.printf("new update interval: %d\n", updateInterval);
             //stdout.printf("\n");
             stages[currentStage].update_display();
 
             if (updateInterval != -1) { 
                 Timeout.add(updateInterval, update_time);
                 return false;
+            } else {
+                stages[currentStage].set_inactive();
+    
+                if (currentStage < numStages - 1) {
+                    currentStage++;
+                    // @TODO add some buffer time when switching to next stage?
+                    stages[currentStage].set_active();
+                    stageStack.set_visible_child(stages[currentStage].get_view());
+                    print("switch stages\n");
+                } else if (repeatBut.get_active()) {
+                    currentStage = 0;
+                    reset_timer();
+                    Timeout.add(timeToRepeat, () => {
+                        start();
+                        return false;
+                    });
+                }
             }
 
-            stages[currentStage].set_inactive();
-
-            if (currentStage < numStages - 1) {
-                currentStage++;
-                // @TODO add some buffer time when switching to next stage?
-                //@restructure change stack display
-                stages[currentStage].set_active();
-                print("switch stages\n");
-            } else if (repeatBut.get_active()) {
-                currentStage = 0;
-                reset_stages();
-                // @TODO add some buffer time while restarting?
-                stages[currentStage].set_active();
-            }
         }
         return stages[currentStage].active;
     }
