@@ -11,8 +11,9 @@ public class PTimer {
     private Box? stageLabels = null;
     private Box? settingsView = null;
     private bool started = false;
-    private int updateInterval = 0;
+    private int updateInterval = 10;
     private int timeToRepeat = 2000;
+    private int timeToSwitchStage = 2000;
     
     private bool doSeconds = false;
 
@@ -191,6 +192,9 @@ public class PTimer {
 
     public void set_active() {
         if (started) {
+            if (stageStack.get_visible_child() != stages[currentStage].get_view()) {
+                stageStack.set_visible_child(stages[currentStage].get_view());
+            }
             if (!stages[currentStage].active) {
                 Timeout.add(0, update_time);
             }
@@ -229,6 +233,9 @@ public class PTimer {
         for (int i = 0; i < numStages; i++) {
             stages[i].reset();
         }
+        currentStage = 0;
+        stageStack.set_visible_child(stages[currentStage].get_view());
+        ta.update_stages(numStages);
     }
 
     /*  public void delete_stage(int stage) {
@@ -237,38 +244,42 @@ public class PTimer {
      
     
     private bool update_time() {
-        if (stages[currentStage].active) {
-            updateInterval = stages[currentStage].update_time();
-            //stdout.printf("new update interval: %d\n", updateInterval);
-            //stdout.printf("\n");
-            stages[currentStage].update_display();
+        if (!stages[currentStage].active) return false;
 
-            if (updateInterval != -1) { 
-                Timeout.add(updateInterval, update_time);
-                return false;
+        updateInterval = stages[currentStage].update_time();
+        stages[currentStage].update_display();
+
+        if (updateInterval != -1) { 
+            Timeout.add(updateInterval, update_time);
+        } else {
+            // timer has ended, now decide between switching stages, repeating timer,
+            // or coming to true end
+
+            set_inactive();
+
+            if (currentStage < numStages - 1) {
+                // increment before timeout so that if play can be pressed before the timeout
+                // executes and itll work properly
+                currentStage++;
+                Timeout.add(timeToSwitchStage, () => {
+                    set_active();
+                    return false;
+                });
+            } else if (repeatBut.get_active()) {
+                reset_timer();
+                Timeout.add(timeToRepeat, () => {
+                    start();
+                    return false;
+                });
             } else {
-                stages[currentStage].set_inactive();
-    
-                if (currentStage < numStages - 1) {
-                    currentStage++;
-                    // @TODO add some buffer time when switching to next stage?
-                    stages[currentStage].set_active();
-                    stageStack.set_visible_child(stages[currentStage].get_view());
-                    print("switch stages\n");
-                } else if (repeatBut.get_active()) {
-                    currentStage = 0;
+                Timeout.add(timeToSwitchStage, () => {
                     reset_timer();
-                    Timeout.add(timeToRepeat, () => {
-                        start();
-                        return false;
-                    });
-                }
+                    return false;
+                });
             }
-
         }
-        return stages[currentStage].active;
+        return false;
     }
-
 }
 
 } // end namespace

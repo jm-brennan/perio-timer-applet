@@ -15,11 +15,9 @@ public class TimerAnimation : Gtk.Widget {
     private int update_interval = 60; // 60
 
     private unowned Stage[] stages = null;
-    private int totalSeconds = 0;
+    private int64 totalTime = 0;
     private int numStages = 1;
-    private int[] secondsOfStages = new int[4];
-    private int64[] lastUpdated = new int64[4];
-    private double[] cummulativeDiff = new double[4];
+    private double[] degreesPastLastUpdate = new double[4];
     private Color[] colors = new Color[4];
 
     
@@ -40,15 +38,9 @@ public class TimerAnimation : Gtk.Widget {
 
     public void update_stages(int numStages) {
         this.numStages = numStages;
-        totalSeconds = 0;
+        totalTime = 0;
         for (int i = 0; i < numStages; i++) {
-            int currentSeconds = 0;
-            currentSeconds += stages[i].seconds;
-            currentSeconds += stages[i].minutes * 60;
-            currentSeconds += stages[i].hours * 60 * 60;
-
-            secondsOfStages[i] = currentSeconds;
-            totalSeconds += currentSeconds;
+            totalTime += stages[i].time;
         }
         redraw_canvas();
     }
@@ -72,82 +64,58 @@ public class TimerAnimation : Gtk.Widget {
         window.process_updates(true);
     }
 
-    public override bool draw(Cairo.Context cr) {        
-        /*  double xc = width / 2;
-        double yc = height / 2;
-        double radius = (width / 2) - border;
-
-        cr.set_line_width(12.0);
-        cr.set_source_rgb(c0[0], c0[1], c0[2]);
-        cr.arc(xc, yc, radius, -65 * (Math.PI/180.0), -45 * (Math.PI/180.0));
-        cr.stroke();  */
+    public override bool draw(Cairo.Context cr) {     
+        //stdout.printf("draw\n");   
         int xc = width / 2;
         int yc = height / 2;
         int radius = (width / 2) - border;
         cr.set_line_width(12.0);
 
-        if (numStages == 1 && !active) {
-            stdout.printf("base fill\n");
+        if (totalTime == 0 && !active) { // when nothing has been entered, draw full circle
             cr.set_source_rgb(colors[0].r, colors[0].g, colors[0].b);
             cr.arc(xc, yc, radius, -90 * Math.PI/180.0, 270 * Math.PI/180.0);
             cr.stroke();
         } else {
-            int64 dt = 0;
-            int64 currentTime = GLib.get_monotonic_time();
-            //stdout.printf("current time: %lld\n", currentTime);
-
-            // @optimization
-            // We know that only one of these is gonna change so we could
-            // keep track of that and store their arcs until the timer gets to that stage
-            double arcStart = 270.0;
-            double arcEnd = 270.0;
+            double arcStart = 360.0;
+            double arcEnd = 360.0;
             for (int i = 0; i < numStages; i++) {
-                arcEnd = arcStart - (360 * (secondsOfStages[i] / (double)totalSeconds));
+                arcEnd = arcStart - (360.0 * (stages[i].time / (double)totalTime));
                 if (stages[i].timeLeft > 0) {
                     cr.set_source_rgb(colors[i].r, colors[i].g, colors[i].b);
-                    // @TODO decrement arcStart with stage progress here
+                    // subtract off degrees known to have been covered, calculated
+                    // as a porportion of how much time is left on the stage over the total time
+                    // for that stage.
+                    arcStart -= (1.0 - (stages[i].timeLeft / (double) stages[i].time)) * (stages[i].time / (double)totalTime) * 360;
+                    
                     if (stages[i].active) {
-                        var tmp = 1.0 - stages[i].timeLeft / (double) stages[i].time;
-                        //stdout.printf("removing since last pause: %f\n", tmp);
-                        arcStart -= tmp;
-                        // @TODO absolute values?
-                        double degPerSec = (arcStart - arcEnd).abs() / stages[i].time;
-                        dt = currentTime - lastUpdated[i];
-                        //stdout.printf("dt: %lld\n", dt);
-                        
-                        var tmp2 = (double)dt * degPerSec;
-                        //stdout.printf("removing dt/time: %f\n", tmp2);
-                        arcStart -= tmp2;
-                        cummulativeDiff[i] += tmp2;
+                        double degPerSec = 360.0 / (double)totalTime;
+                        int64 dt = GLib.get_monotonic_time() - stages[i].lastUpdated;   
+                        degreesPastLastUpdate[i] = dt * degPerSec;
                     }
-                    arcStart -= cummulativeDiff[i];
-                    //stdout.printf("stage[%d] start: %f, end: %f\n", i, arcStart, arcEnd);
-                    cr.arc(xc, yc, radius, arcEnd * Math.PI/180.0, arcStart * Math.PI/180.0);
+                    arcStart = double.max(arcStart - degreesPastLastUpdate[i], arcEnd);
+                    
+                    // the cairo arc has 12-o-clock as 270, 3-o-clock as 0. My implementation treats
+                    // 12-o-clock as 360/0 so that i can assume the degrees are always decreasing,
+                    // so just rotate by 90 degrees when actually
+                    cr.arc(xc, yc, radius, (arcEnd - 90.0) * Math.PI/180.0, (arcStart - 90.0) * Math.PI/180.0);
                     cr.stroke();
                 }
                 arcStart = arcEnd;
-                lastUpdated[i] = currentTime;
             }
-            //stdout.printf("\n\n");
         }
         return true;
     }
     
     public void set_inactive() { 
+        if (!active) return;
         for (int i = 0; i < numStages; i++) {
-            lastUpdated[i] = 0;
-            cummulativeDiff[i] = 0;
+            degreesPastLastUpdate[i] = 0;
         }   
         active = false; 
     }
 
-    public void set_active() { 
-        for (int i = 0; i < numStages; i++) {
-            int64 currentTime = GLib.get_monotonic_time();
-            if (lastUpdated[i] == 0) {
-                lastUpdated[i] = currentTime;
-            }
-        }    
+    public void set_active() {  
+        if (active) return;
         active = true; 
         Timeout.add(update_interval, update); 
     }
