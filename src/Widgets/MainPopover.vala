@@ -3,7 +3,7 @@ using Gtk;
 namespace PerioTimer.Widgets {
 
 public class MainPopover : Budgie.Popover {
-    private Stack? stack = null;
+    private Stack? timerStack = null;
     private StackSwitcher? stackSwitcher = null;
     private Box? mainView = null;
     private Box? header = null;
@@ -23,6 +23,7 @@ public class MainPopover : Budgie.Popover {
 
         Object(relative_to: window_parent);
         this.set_resizable(false);
+        // need to intercept button presses for fancy animation
         add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK);
         add_events(Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK);
         
@@ -31,35 +32,40 @@ public class MainPopover : Budgie.Popover {
 
         header = new Box(Orientation.HORIZONTAL, 0);
         header.height_request = 10;
-        // @TODO decide on a name and styling
-        headerLabel = new Label("'Perio?' Timer!");
-        
-        header.pack_start(headerLabel, false, false, 0);
+        // @TODO style this
+        headerLabel = new Label("Perio Timer");
+        headerLabel.get_style_context().add_class("app_title");
+        header.pack_start(headerLabel, false, false, 5);
+
         headerNewButton = new Button.from_icon_name("list-add-symbolic", IconSize.MENU);
         headerNewButton.clicked.connect(() => {
             if (numTimers == MAX_TIMERS) return;
-            
+            if (numTimers == 1) {
+                mainView.pack_start(stackSwitcher, true, true, 0);
+                mainView.reorder_child(stackSwitcher, 1);
+            }
             timers[currentTimer].set_inactive();
             currentTimer = numTimers;
             numTimers++;
 
+            // @TODO make this less bad once new stack implemention is done
             timers[currentTimer] = new PTimer(width, height, 1);
-            stack.add_titled(timers[currentTimer].timer_view(), currentTimer.to_string(), currentTimer.to_string());
+            timerStack.add_titled(timers[currentTimer].timer_view(), currentTimer.to_string(), "Timer " + currentTimer.to_string());
             mainView.show_all();
-            stack.set_visible_child_name(currentTimer.to_string());
+            timerStack.set_visible_child_name(currentTimer.to_string());
         });
         header.pack_end(headerNewButton, false, false, 0);
         mainView.pack_start(header, false, false, 0);
 
-        stack = new Stack();
-        stack.set_transition_type(StackTransitionType.SLIDE_LEFT_RIGHT);
+        timerStack = new Stack();
+        timerStack.set_transition_type(StackTransitionType.SLIDE_LEFT_RIGHT);
         stackSwitcher = new StackSwitcher();
-        stackSwitcher.stack = stack;
+        stackSwitcher.stack = timerStack;
         stackSwitcher.set_homogeneous(true);
-        stack.notify["visible-child"].connect(() => {
+        timerStack.notify["visible-child"].connect(() => {
             // @TODO this is a temporary way of naming the stacks/setting which one is 
             // visible, will be changed when new naming technique is decided/implemented
-            string visibleChildName = stack.get_visible_child_name();
+            string visibleChildName = timerStack.get_visible_child_name();
             if (visibleChildName == null) {
                 visibleChildName = "0";
             }
@@ -67,10 +73,9 @@ public class MainPopover : Budgie.Popover {
         });
 
         timers[0] = new PTimer(width, height, 0);
-        stack.add_titled(timers[0].timer_view(), currentTimer.to_string(), "Timer");
-        mainView.pack_start(stackSwitcher, true, true, 0);
+        timerStack.add_titled(timers[0].timer_view(), currentTimer.to_string(), "Timer 0");
 
-        mainView.pack_start(stack, false, false, 0);
+        mainView.pack_start(timerStack, false, false, 0);
         mainView.show_all();
         add(mainView);
     }

@@ -19,7 +19,7 @@ public class Applet : Budgie.Applet {
 
     public Applet(string uuid) {
         Object(uuid: uuid);
-
+        Gtk.Settings.get_default().set("gtk-application-prefer-dark-theme", true);
         // "textview" handles the actual text, while "textview text" handles the appearance
         // of the textview widget. It does not make sense but thats apparently just how gtk works.
         // @TODO All css styling stuff should be more local
@@ -30,10 +30,35 @@ public class Applet : Budgie.Applet {
                     letter-spacing: 3px;
                     font-size: 40px;
                 }
-                textview text {
+                label.app_title {
+                    font-family: lato;
+                    font-size: 15px;
+                    opacity: 0.75;
+                }
+                label.stage_name {
+                    font-family: lato;
+                    font-size: 15px;
+                    opacity: 0.75;
+                }
+                textview.red text {
                     border-bottom-width: 3px;
                     border-bottom-style: solid;
-                    border-bottom-color: #cd5334;
+                    border-bottom-color: #F25F5C;
+                }
+                textview.seagreen text {
+                    border-bottom-width: 3px;
+                    border-bottom-style: solid;
+                    border-bottom-color: #00FDDC;
+                }
+                textview.yellow text {
+                    border-bottom-width: 3px;
+                    border-bottom-style: solid;
+                    border-bottom-color: #FFE066;
+                }
+                textview.greensheen text {
+                    border-bottom-width: 3px;
+                    border-bottom-style: solid;
+                    border-bottom-color: #70C1B3;
                 }
             """;
 

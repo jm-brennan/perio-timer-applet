@@ -12,7 +12,8 @@ enum KeyCode {
     SPACE = 32,
     m = 109,
     n = 110,
-    r = 114
+    r = 114,
+    v = 118
 }
 
 
@@ -22,8 +23,8 @@ public class InputManager {
     private PTimer? timer = null;
     private bool doSeconds = false;
 
-    public InputManager(PTimer pt) {
-        this.timer = pt;
+    public InputManager(PTimer* pt) {
+        this.timer = (PTimer)pt;
     }
 
     public void keypress(Gdk.EventKey event) {
@@ -35,7 +36,7 @@ public class InputManager {
                 timer.switch_stage_editing(-1);
                 break;
             case KeyCode.ENTER:
-                timer.set_active();
+                timer.start();
                 break;
             case KeyCode.SPACE:
                 timer.toggle_active();
@@ -87,6 +88,9 @@ public class InputManager {
                 case KeyCode.r:
                     timer.toggle_repeat();
                     break;
+                case KeyCode.v:
+                    timer.toggle_volume();
+                    break;
             }
         }
         
@@ -100,8 +104,10 @@ public class InputManager {
     private void new_stage() {
         timer.new_stage();
         inputString = "";
-        timer.set_input_time(inputString);
+        //timer.set_input_time(inputString);
     } 
+
+    public void set_inputString(string inputString) { this.inputString = inputString; }
 }
 
 } // end namespace
