@@ -32,7 +32,6 @@ public class MainPopover : Budgie.Popover {
 
         header = new Box(Orientation.HORIZONTAL, 0);
         header.height_request = 10;
-        // @TODO style this
         headerLabel = new Label("Perio Timer");
         headerLabel.get_style_context().add_class("app_title");
         header.pack_start(headerLabel, false, false, 5);
@@ -49,8 +48,8 @@ public class MainPopover : Budgie.Popover {
             numTimers++;
 
             // @TODO make this less bad once new stack implemention is done
-            timers[currentTimer] = new PTimer(width, height, 1);
-            timerStack.add_titled(timers[currentTimer].timer_view(), currentTimer.to_string(), "Timer " + currentTimer.to_string());
+            timers[currentTimer] = new PTimer(width, height, 1, this);
+            timerStack.add_titled(timers[currentTimer].get_view(), currentTimer.to_string(), "Timer " + currentTimer.to_string());
             mainView.show_all();
             timerStack.set_visible_child_name(currentTimer.to_string());
         });
@@ -72,12 +71,21 @@ public class MainPopover : Budgie.Popover {
             currentTimer = int.parse(visibleChildName);
         });
 
-        timers[0] = new PTimer(width, height, 0);
-        timerStack.add_titled(timers[0].timer_view(), currentTimer.to_string(), "Timer 0");
+        timers[0] = new PTimer(width, height, 0, this);
+        timerStack.add_titled(timers[0].get_view(), currentTimer.to_string(), "Timer 0");
 
         mainView.pack_start(timerStack, false, false, 0);
         mainView.show_all();
         add(mainView);
+    }
+
+    public void switch_timer(int direction) {
+        int prevTimer = currentTimer;
+        currentTimer += direction;
+        if (currentTimer < 0 || currentTimer >= numTimers) {
+            currentTimer = prevTimer;
+        }
+        timerStack.set_visible_child(timers[currentTimer].get_view());
     }
 
     public override bool key_press_event (Gdk.EventKey event) {

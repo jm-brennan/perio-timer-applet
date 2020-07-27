@@ -3,13 +3,14 @@ using GLib;
 namespace PerioTimer.Widgets {
 
 enum KeyCode {
-    RIGHT = 65363,
-    LEFT  = 65361,
-    ENTER = 65293,
-    TAB   = 65289,
-    BACK  = 65288,
-    COLON = 58,
-    SPACE = 32,
+    DELETE = 65535
+    RIGHT  = 65363,
+    LEFT   = 65361,
+    ENTER  = 65293,
+    TAB    = 65289,
+    BACK   = 65288,
+    COLON  = 58,
+    SPACE  = 32,
     m = 109,
     n = 110,
     r = 114,
@@ -21,24 +22,38 @@ public class InputManager {
     private string inputString = "";
     private int allowedInputLength = 4;
     private PTimer? timer = null;
+    private MainPopover? mp = null;
     private bool doSeconds = false;
 
-    public InputManager(PTimer* pt) {
-        this.timer = (PTimer)pt;
+    public InputManager(PTimer pt, MainPopover mp) {
+        this.timer = pt;
+        this.mp = mp;
     }
 
     public void keypress(Gdk.EventKey event) {
+        Gdk.ModifierType modifiers = Gtk.accelerator_get_default_mod_mask();
         switch (event.keyval) {
             case KeyCode.RIGHT:
-                timer.switch_stage_editing(1);
+                if ((event.state & modifiers) == Gdk.ModifierType.CONTROL_MASK) {
+                    mp.switch_timer(1);
+                } else {
+                    timer.switch_stage_editing(1);
+                }
                 break;
             case KeyCode.LEFT:
-                timer.switch_stage_editing(-1);
+                if ((event.state & modifiers) == Gdk.ModifierType.CONTROL_MASK) {
+                    mp.switch_timer(-1);
+                } else {
+                    timer.switch_stage_editing(-1);
+                }
                 break;
             case KeyCode.ENTER:
                 timer.start();
                 break;
             case KeyCode.TAB:
+                // so that trying to alt-tab out of the applet doesn't make a new stage
+                // MOD1_MASK is (usually) alt according to docs
+                if ((event.state & modifiers) == Gdk.ModifierType.MOD1_MASK) break;
                 new_stage();
                 break;
             case KeyCode.BACK:

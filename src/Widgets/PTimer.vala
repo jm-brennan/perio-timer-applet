@@ -45,8 +45,8 @@ public class PTimer {
     private int currentStage = 0;
     private int numStages = 1;
 
-    public PTimer(int width, int height, int colorset) {
-        im = new InputManager(this);
+    public PTimer(int width, int height, int colorset, MainPopover parent) {
+        im = new InputManager(this, parent);
         timerView = new Box(Orientation.VERTICAL, 0);
         // @TODO input redirection
         timerView.set_focus_on_click(true);
@@ -164,7 +164,7 @@ public class PTimer {
         }
     }
 
-    public Box timer_view() { return this.timerView; }
+    public Box get_view() { return this.timerView; }
 
     public void start() {
         if (started) return;
