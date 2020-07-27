@@ -44,7 +44,7 @@ public class MainPopover : Budgie.Popover {
                 mainView.pack_start(stackSwitcher, true, true, 0);
                 mainView.reorder_child(stackSwitcher, 1);
             }
-            timers[currentTimer].set_inactive();
+            //timers[currentTimer].set_inactive();
             currentTimer = numTimers;
             numTimers++;
 

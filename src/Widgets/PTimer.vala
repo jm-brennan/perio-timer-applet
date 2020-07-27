@@ -14,7 +14,7 @@ public class PTimer {
     private bool restarted = false;
     private int updateInterval = 10;
     private int timeToRepeat = 2000;
-    private int timeToSwitchStage = 2000;
+    private int timeToSwitchStage = 1000;
     
     private bool doSeconds = false;
 
@@ -263,6 +263,7 @@ public class PTimer {
                 // increment before timeout so that play can be pressed before the timeout
                 // executes and it'll work properly
                 currentStage++;
+                //stageStack.set_visible_child(stages[currentStage].get_view());
                 Timeout.add(timeToSwitchStage, () => {
                     set_active();
                     return false;
