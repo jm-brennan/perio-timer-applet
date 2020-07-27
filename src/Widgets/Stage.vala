@@ -109,6 +109,23 @@ public class Stage {
         }
     }
 
+    public string string_from_timeLeft() {
+        string inputStringForCurrentTime = "";
+        if (hoursLeft > 0) inputStringForCurrentTime += hoursLeft.to_string();
+
+        if (minutesLeft > 0) {
+            if (minutesLeft < 10 && hoursLeft > 0) inputStringForCurrentTime += " ";
+            inputStringForCurrentTime += minutesLeft.to_string();
+        }
+
+        if (secondsLeft > 0) {
+            if (secondsLeft < 10 && minutesLeft > 0) inputStringForCurrentTime += " ";
+            inputStringForCurrentTime += secondsLeft.to_string();
+        }
+
+        return inputStringForCurrentTime;
+    }
+
     public string make_display_string(int hours, int minutes, int seconds, bool forLabel = false) {
         string displayString = "";
         
@@ -157,8 +174,7 @@ public class Stage {
         } else {
             update_smhLeft_from_timeLeft();
 
-            // returns miliseconds to set new update interval to try to get timing just right
-            int milisecondsUntilUpdate = (((int)timeLeft % 1000000) / 1000) + 1;
+            int milisecondsUntilUpdate = ((int)(timeLeft % 1000000) / 1000) + 1;
             return milisecondsUntilUpdate;
         }
     }
@@ -181,7 +197,6 @@ public class Stage {
         hoursLeft   = (int)(timeLeftSeconds / 3600); 
         minutesLeft = (int)(timeLeftSeconds - (3600 * hoursLeft)) / 60;
         secondsLeft = (int)(timeLeftSeconds - (3600 * hoursLeft) - (minutesLeft*60));
-        //stdout.printf("hl: %d, ml: %d, sl: %d\n", hoursLeft, minutesLeft, secondsLeft);
     }
 
     public void set_active() {

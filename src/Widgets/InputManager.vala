@@ -38,14 +38,19 @@ public class InputManager {
             case KeyCode.ENTER:
                 timer.start();
                 break;
-            case KeyCode.SPACE:
-                timer.toggle_active();
-                break;
             case KeyCode.TAB:
                 new_stage();
                 break;
             case KeyCode.BACK:
                 backspace();
+                break;
+            case KeyCode.COLON:
+                toggle_seconds();
+                timer.toggle_seconds();
+                timer.set_input_time(inputString);
+                break;
+            case KeyCode.SPACE:
+                timer.toggle_active();
                 break;
             default:
                 handle_regular_key(event.keyval, event.str);
@@ -63,22 +68,9 @@ public class InputManager {
             }
         } else {
             // set to lowercase ascii
-            if (keyval >= 65 && keyval <= 90) { keyval += 32; }
+            if (keyval >= 65 && keyval <= 90) keyval += 32;
             
             switch (keyval) {
-                case KeyCode.COLON:
-                    doSeconds = !doSeconds;
-                    if (doSeconds) {
-                        allowedInputLength = 6;
-                    } else {
-                        allowedInputLength = 4;
-                        if (inputString.length > allowedInputLength) {
-                            inputString = inputString.substring(0, allowedInputLength);
-                        }
-                    }
-                    timer.toggle_seconds();
-                    timer.set_input_time(inputString);
-                    break;
                 case KeyCode.m:
                     timer.toggle_volume();
                     break;
@@ -95,6 +87,19 @@ public class InputManager {
         }
         
     }
+
+    public void toggle_seconds() {
+        doSeconds = !doSeconds;
+        if (doSeconds) {
+            allowedInputLength = 6;
+        } else {
+            allowedInputLength = 4;
+            if (inputString.length > allowedInputLength) {
+                inputString = inputString.substring(0, allowedInputLength);
+            }
+        }
+        
+    }
     
     private void backspace() {
         inputString = inputString.substring(0, inputString.length - 1);
@@ -104,8 +109,7 @@ public class InputManager {
     private void new_stage() {
         timer.new_stage();
         inputString = "";
-        //timer.set_input_time(inputString);
-    } 
+    }
 
     public void set_inputString(string inputString) { this.inputString = inputString; }
 }

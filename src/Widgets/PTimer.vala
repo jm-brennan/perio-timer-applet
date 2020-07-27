@@ -180,6 +180,11 @@ public class PTimer {
             currentStage = 0;
             stageStack.set_visible_child(stages[currentStage].get_view());
             started = true;
+            // allows for proper editing of the stage when paused
+            if (!doSeconds) {
+                toggle_seconds();
+                im.toggle_seconds();
+            }
             set_active();
         }
     }
@@ -208,19 +213,27 @@ public class PTimer {
     public void set_inactive() {
         if (started) {
             stages[currentStage].set_inactive();
+            
+            // set the inputString of the inputManager as though we had
+            // typed out the currently displaying time so it can be edited
+            string s = stages[currentStage].string_from_timeLeft();
+            stages[currentStage].inputString = s;
+            im.set_inputString(s);
+            
             ta.set_inactive();
         }
     }
 
+    // called by inputManager, does not change inputManager's doSeconds
     public void toggle_seconds() {
+        if (stages[currentStage].active) return;
+
         // have to toggle doSeconds on all of them and update their text values
         // so that it will be correct when switching to view other stages
         doSeconds = !doSeconds;
-        if (!stages[currentStage].active){
-            for (int i = 0; i < numStages; i++) {
-                stages[i].doSeconds = doSeconds;
-                stages[i].update_display();
-            }
+        for (int i = 0; i < numStages; i++) {
+            stages[i].doSeconds = doSeconds;
+            stages[i].update_display();
         }
     }
 
