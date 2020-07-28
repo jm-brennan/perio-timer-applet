@@ -17,7 +17,6 @@ public class Stage {
     public Label? label = new Label("0s");
     public Label? labelDot = null;
     
-    private Box? view = null;
     private TextView? textView = null;
     private string[] smh = new string[3];
     public int hours = 0;
@@ -61,18 +60,6 @@ public class Stage {
                 break;
         }
 
-        // textview needs to be wrapped in center of a 3x3 box grid to get the 
-        // bottom border attribute to appear properly. Because it is added to an overlay,
-        // can't just pack_start with expand=false to get proper vertical alignment,
-        // and need empty widgets (just chose labels) to make left and right boundaries.
-        // There may be better ways to accomplish this, but I am a gtk novice.
-        view = new Box(Orientation.VERTICAL, 0);
-        view.set_homogeneous(true);
-        var textViewBoxH = new Box(Orientation.HORIZONTAL, 0);
-        textViewBoxH.set_homogeneous(false);
-        var rlabel = new Label("");
-        var llabel = new Label("");
-        
         textView = new TextView();        
         textView.get_style_context().add_class(styleClass);
         textView.get_style_context().add_class("time_view");
@@ -81,17 +68,11 @@ public class Stage {
         textView.cursor_visible = false;
         textView.set_editable(false);
         
-        textViewBoxH.pack_start(llabel, false, false, 0);
         textView.set_halign(Align.CENTER);
         textView.set_valign(Align.CENTER);
-        // this needs the expand properties=true so that calling set_halign will matter
-        textViewBoxH.pack_start(textView, true, true, 0);
-        textViewBoxH.pack_start(rlabel, false, false, 0);
-        view.pack_start(textViewBoxH, false, false, 0);
 
         labelBox = new Box(Orientation.HORIZONTAL, 0);
         labelBox.set_spacing(10);
-        //labelBox.pack_start(label, false, false, 0);
         label.get_style_context().add_class("stage_name");
     }
 
@@ -187,7 +168,7 @@ public class Stage {
         int64 deltaTime = currentTime - lastUpdated;
         timeLeft -= deltaTime;
         lastUpdated = currentTime;
-        // @TODO do i need this <= 100? or could it just be <= 0?? may be related to below todos
+        // @TODO do i need this <= 100? or could it just be <= 0??
         if (timeLeft <= 100) {
             timeLeft = 0;
             return -1;
@@ -250,9 +231,10 @@ public class Stage {
         update_display();
     }
 
-    public Box get_view() {
-        return view;
+    public TextView get_view() {
+        return textView;
     }
 
 }
-}
+
+} // end namespace

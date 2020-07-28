@@ -9,7 +9,6 @@ public class PTimer {
     private Box? timerView = null;
     private Stack stageStack = null;
     private Box? stageLabels = null;
-    private Box? settingsView = null;
     private bool started = false;
     private bool restarted = false;
     private int updateInterval = 10;
@@ -35,6 +34,17 @@ public class PTimer {
     private Image volumeImOn = new Image.from_icon_name("audio-volume-high-symbolic", IconSize.MENU);
     private Image volumeImOff = new Image.from_icon_name("audio-volume-muted-symbolic", IconSize.MENU);
 
+    private Button stageLeft = null;
+    private Image stageLeftDelete = new Image.from_icon_name("list-remove-symbolic", IconSize.MENU);
+    private Image stageLeftSkip = new Image.from_icon_name("media-skip-backward-symbolic", IconSize.MENU);
+
+    private Button stageCenter = null;
+    private Image stageCenterPlay = new Image.from_icon_name("media-playback-start-symbolic", IconSize.MENU);
+    private Image stageCenterPause = new Image.from_icon_name("media-playback-pause-symbolic", IconSize.MENU);
+
+    private Button stageRight = null;
+    private Image stageRightAdd = new Image.from_icon_name("list-add-symbolic", IconSize.MENU);
+    private Image stageRightSkip = new Image.from_icon_name("media-skip-forward-symbolic", IconSize.MENU);
 
     // @TODO testing hvaing a text box, need to figure out input redirection
     // public Entry te = null;
@@ -61,6 +71,7 @@ public class PTimer {
         overlay = new Overlay();
         overlay.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK);
         overlay.set_size_request(width, height);
+        overlay.set_halign(Align.CENTER);
         overlay.button_press_event.connect((e) => {
             this.toggle_active();
             return true;
@@ -84,23 +95,61 @@ public class PTimer {
         stageStack.set_transition_type(StackTransitionType.SLIDE_LEFT_RIGHT);
         stageStack.add(stages[0].get_view());
         stageStack.set_visible_child(stages[0].get_view());
+        stageStack.set_halign(Align.CENTER);
         overlay.add(stageStack);
 
         ta = new TimerAnimation(width, height, stages);
         overlay.add_overlay(ta);
         timerView.pack_start(overlay, false, false, 0);
         
-        stageLabels = new Box(Orientation.HORIZONTAL, 0);
-        stageLabels.height_request = 20;
-        stageLabels.set_halign(Align.CENTER);
-        stageLabels.set_spacing(10);
-        timerView.pack_start(stageLabels, true, true, 0);
+        Box stageControlView = new Box(Orientation.HORIZONTAL, 0);
+        stageControlView.set_halign(Align.CENTER);
+        stageControlView.set_spacing(20);
+        stageLeft = new Button();
+        stageLeft.set_image(stageLeftDelete);
+        stageLeft.clicked.connect(() => {
+            if (stages[currentStage].active) {
+                change_stage(-1);
+            } else {
+                delete_stage();
+            }
+        });
+        stageControlView.pack_start(stageLeft, false, false, 0);
+
+        stageCenter = new Button();
+        stageCenter.set_image(stageCenterPlay);
+        stageCenter.clicked.connect(() => {
+            if (started) {
+                toggle_active();
+            } else {
+                start();
+            }
+        });
+        stageControlView.pack_start(stageCenter, false, false, 0);
         
+        stageRight = new Button();
+        stageRight.set_image(stageRightAdd);
+        stageRight.clicked.connect(() => {
+            if (stages[currentStage].active) {
+                change_stage(1);
+            } else {
+                add_stage();
+            }
+        });
+        stageControlView.pack_start(stageRight, false, false, 0);
+        timerView.pack_start(stageControlView, true, true, 0);
+
         // @TODO text entry for timer names? gotta figure out input redirection
         // te = new Entry();
         // timerView.pack_start(te, false, false, 0);
 
-        settingsView = new Box(Orientation.HORIZONTAL, 0);
+        stageLabels = new Box(Orientation.HORIZONTAL, 0);
+        stageLabels.height_request = 20;
+        stageLabels.set_halign(Align.CENTER);
+        stageLabels.set_spacing(10);
+        timerView.pack_start(stageLabels, true, true, 5);
+
+        Box settingsView = new Box(Orientation.HORIZONTAL, 0);
 
         repeatBut = new ToggleButton();
         repeatBut.set_image(repeatImOff);
@@ -160,7 +209,7 @@ public class PTimer {
         set_active();
     }
 
-    public void new_stage() {
+    public void add_stage() {
         if (numStages == MAX_STAGES) return;
         
         add_label();
@@ -186,6 +235,7 @@ public class PTimer {
             stageStack.add(stages[stagesToReorder.pop_head()].get_view());
         }
         
+        im.set_inputString("");
         ta.update_stages(numStages);
         timerView.show_all();
         stageStack.set_visible_child(stages[currentStage].get_view());
@@ -252,6 +302,10 @@ public class PTimer {
     public void set_active() {
         if (!started) return;
 
+        stageLeft.set_image(stageLeftSkip);
+        stageCenter.set_image(stageCenterPause);
+        stageRight.set_image(stageRightSkip);
+
         if (stageStack.get_visible_child() != stages[currentStage].get_view()) {
             stageStack.set_visible_child(stages[currentStage].get_view());
         }
@@ -265,6 +319,10 @@ public class PTimer {
     public void set_inactive() {
         if (!started) return;
 
+        stageLeft.set_image(stageLeftDelete);
+        stageCenter.set_image(stageCenterPlay);
+        stageRight.set_image(stageRightAdd);
+
         stages[currentStage].set_inactive();
         
         // set the inputString of the inputManager as though we had
@@ -274,6 +332,10 @@ public class PTimer {
         im.set_inputString(s);
         
         ta.set_inactive();
+    }
+
+    private void change_stage(int direction) {
+        stdout.printf("skip to stage: %d\n", currentStage + direction);
     }
 
     // called by inputManager, does not change inputManager's doSeconds

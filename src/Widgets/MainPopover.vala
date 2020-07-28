@@ -12,7 +12,7 @@ public class MainPopover : Budgie.Popover {
     private PTimer[] timers = new PTimer[3];
     private int currentTimer = 0;
     private int numTimers = 1;
-    private const int MAX_TIMERS = 3;
+    private const int MAX_TIMERS = 4;
 
     public MainPopover(Widget? window_parent, int width, int height) {
         /*  
@@ -43,7 +43,6 @@ public class MainPopover : Budgie.Popover {
                 mainView.pack_start(stackSwitcher, true, true, 0);
                 mainView.reorder_child(stackSwitcher, 1);
             }
-            //timers[currentTimer].set_inactive();
             currentTimer = numTimers;
             numTimers++;
 
@@ -92,6 +91,6 @@ public class MainPopover : Budgie.Popover {
         timers[currentTimer].im.keypress(event);
         return Gdk.EVENT_PROPAGATE;
     }
-} // end class
+}
 
 } // end namespace

@@ -57,7 +57,7 @@ public class InputManager {
                 // so that trying to alt-tab out of the applet doesn't make a new stage
                 // MOD1_MASK is (usually) alt according to docs
                 if ((event.state & modifiers) == Gdk.ModifierType.MOD1_MASK) break;
-                new_stage();
+                add_stage();
                 break;
             case KeyCode.BACK:
                 backspace();
@@ -124,9 +124,8 @@ public class InputManager {
         timer.set_input_time(inputString);
     }
 
-    private void new_stage() {
-        timer.new_stage();
-        inputString = "";
+    private void add_stage() {
+        timer.add_stage();
     }
 
     public void set_inputString(string inputString) { this.inputString = inputString; }

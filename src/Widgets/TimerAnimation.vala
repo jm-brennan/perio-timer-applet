@@ -6,15 +6,12 @@ public class TimerAnimation : Gtk.Widget {
     private int width;
     private int height;
     private bool active = false;
-    private int update_interval = 60; // 60
+    private int update_interval = 60;
 
     private unowned Stage[] stages = null;
     private int64 totalTime = 0;
     private int numStages = 1;
     private double[] degreesPastLastUpdate = new double[4];
-
-    // @Temporary
-    //private int counter = 0;
 
     
     public TimerAnimation(int width, int height, Stage[] stages) {
@@ -30,7 +27,6 @@ public class TimerAnimation : Gtk.Widget {
         this.numStages = numStages;
         totalTime = 0;
         for (int i = 0; i < numStages; i++) {
-            stdout.printf("time: %lld\n", stages[i].time);
             totalTime += stages[i].time;
         }
         redraw_canvas();
@@ -93,8 +89,6 @@ public class TimerAnimation : Gtk.Widget {
                 arcStart = arcEnd;
             }
         }
-        //stdout.printf("finish draw %d\n", counter);
-        //counter++;
         return true;
     }
     
