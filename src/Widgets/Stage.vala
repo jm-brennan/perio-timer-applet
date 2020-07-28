@@ -13,7 +13,9 @@ public class Stage {
     public bool active = false;
     // @TODO load doSeconds from settings
     public bool doSeconds = false;
-    public Label? label = new Label("");
+    public Box? labelBox = null;
+    public Label? label = new Label("0s");
+    public Label? labelDot = null;
     
     private Box? view = null;
     private TextView? textView = null;
@@ -21,13 +23,43 @@ public class Stage {
     public int hours = 0;
     public int minutes = 0;
     public int seconds = 0;
-    private float r = 0.0f;
-    private float g = 0.0f;
-    private float b = 0.0f;
+    public int color;
+    public float r = 0.0f;
+    public float g = 0.0f;
+    public float b = 0.0f;
     
-    public Stage(int stageIndex, bool doSeconds) {
-        // init colors?
+    public Stage(int color, bool doSeconds) {
         this.doSeconds = doSeconds;
+        this.color = color;
+        
+        // @TODO init colors from a file or something
+        string styleClass = "";
+        switch(color) {
+            case 0:
+                styleClass = "red";
+                r = 0.949f;
+                g = 0.3725f;
+                b = 0.3608f;
+                break;
+            case 1:
+                styleClass = "seagreen";
+                r = 0.0f;
+                g = 0.9922f;
+                b = 0.8627f;
+                break;
+            case 2:
+                styleClass = "yellow";
+                r = 1.0f;
+                g = 0.8784f;
+                b = 0.4f;
+                break;
+            case 3:
+                styleClass = "greensheen";
+                r = 0.4392f;
+                g = 0.7569f;
+                b = 0.702f;
+                break;
+        }
 
         // textview needs to be wrapped in center of a 3x3 box grid to get the 
         // bottom border attribute to appear properly. Because it is added to an overlay,
@@ -41,22 +73,7 @@ public class Stage {
         var rlabel = new Label("");
         var llabel = new Label("");
         
-        textView = new TextView();
-        string styleClass = "";
-        switch(stageIndex) {
-            case 0:
-                styleClass = "red";
-                break;
-            case 1:
-                styleClass = "seagreen";
-                break;
-            case 2:
-                styleClass = "yellow";
-                break;
-            case 3:
-                styleClass = "greensheen";
-                break;
-        }
+        textView = new TextView();        
         textView.get_style_context().add_class(styleClass);
         textView.get_style_context().add_class("time_view");
         textView.buffer.text = make_display_string(hours, minutes, seconds);
@@ -72,6 +89,9 @@ public class Stage {
         textViewBoxH.pack_start(rlabel, false, false, 0);
         view.pack_start(textViewBoxH, false, false, 0);
 
+        labelBox = new Box(Orientation.HORIZONTAL, 0);
+        labelBox.set_spacing(10);
+        //labelBox.pack_start(label, false, false, 0);
         label.get_style_context().add_class("stage_name");
     }
 
@@ -194,7 +214,7 @@ public class Stage {
     public void update_smhLeft_from_timeLeft() {
         int64 timeLeftSeconds = timeLeft / 1000000;
 
-        hoursLeft   = (int)(timeLeftSeconds / 3600); 
+        hoursLeft   = (int)(timeLeftSeconds / 3600);
         minutesLeft = (int)(timeLeftSeconds - (3600 * hoursLeft)) / 60;
         secondsLeft = (int)(timeLeftSeconds - (3600 * hoursLeft) - (minutesLeft*60));
     }

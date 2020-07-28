@@ -44,12 +44,19 @@ public class PTimer {
     private Stage[] stages = new Stage[MAX_STAGES];
     private int currentStage = 0;
     private int numStages = 1;
+    private GLib.Queue<int> stageColors = new GLib.Queue<int>();
 
     public PTimer(int width, int height, int colorset, MainPopover parent) {
         im = new InputManager(this, parent);
+
+        stageColors.push_head(3);
+        stageColors.push_head(2);
+        stageColors.push_head(1);
+        stageColors.push_head(0);
+        
         timerView = new Box(Orientation.VERTICAL, 0);
         // @TODO input redirection
-        timerView.set_focus_on_click(true);
+        //timerView.set_focus_on_click(true);
         
         overlay = new Overlay();
         overlay.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK);
@@ -72,21 +79,21 @@ public class PTimer {
         });  */
         
         
-        stages[0] = new Stage(0, doSeconds);
+        stages[0] = new Stage(stageColors.pop_head(), doSeconds);
         stageStack = new Stack();
         stageStack.set_transition_type(StackTransitionType.SLIDE_LEFT_RIGHT);
         stageStack.add(stages[0].get_view());
         stageStack.set_visible_child(stages[0].get_view());
         overlay.add(stageStack);
 
-        Stage* stagePtr = stages;
-        ta = new TimerAnimation(width, height, colorset, stagePtr);
+        ta = new TimerAnimation(width, height, stages);
         overlay.add_overlay(ta);
         timerView.pack_start(overlay, false, false, 0);
         
         stageLabels = new Box(Orientation.HORIZONTAL, 0);
         stageLabels.height_request = 20;
         stageLabels.set_halign(Align.CENTER);
+        stageLabels.set_spacing(10);
         timerView.pack_start(stageLabels, true, true, 0);
         
         // @TODO text entry for timer names? gotta figure out input redirection
@@ -136,57 +143,102 @@ public class PTimer {
         ta.update_stages(numStages);
     }
 
+    public void start() {
+        if (started || stages[currentStage].active) return;
+
+        if (!restarted) add_label();
+
+        currentStage = 0;
+        stageStack.set_visible_child(stages[currentStage].get_view());
+        started = true;
+
+        // allows for proper editing of the stage when paused
+        if (!doSeconds) {
+            toggle_seconds();
+            im.toggle_seconds();
+        }
+        set_active();
+    }
+
     public void new_stage() {
         if (numStages == MAX_STAGES) return;
-        if (numStages > 1) {
-            stageLabels.pack_start(new Label("\u2022"), false, false, 5);
+        
+        add_label();
+        started = false;
+
+        // because the stageStack is an actual stack, can't just insert a new stage
+        // into the middle of it. Have to pop off all the elements past the insertion
+        // point and add them back on after making/adding the new stage
+        GLib.Queue<int> stagesToReorder = new GLib.Queue<int>();
+        for (int i = numStages; i > currentStage + 1; i--) {
+            stages[i] = stages[i - 1];
+            stagesToReorder.push_head(i);
+            stageStack.remove(stages[i].get_view());
         }
 
-        stageLabels.pack_start(stages[currentStage].label, false, false, 5);
-        // @TODO make it so it can be added to middle of sequence (not linked list tho lol)
-        currentStage = numStages;
+        currentStage++;
         numStages++;
 
-        stages[currentStage] = new Stage(currentStage, doSeconds);
+        stages[currentStage] = new Stage(stageColors.pop_head(), doSeconds);
         stageStack.add(stages[currentStage].get_view());
+
+        while (stagesToReorder.get_length() != 0) {
+            stageStack.add(stages[stagesToReorder.pop_head()].get_view());
+        }
+        
+        ta.update_stages(numStages);
         timerView.show_all();
         stageStack.set_visible_child(stages[currentStage].get_view());
     }
 
-    public void switch_stage_editing(int switchDirection) {
-        if (!stages[currentStage].active) {
-            currentStage += switchDirection;
-            // don't walk off either end of defined stages
-            currentStage = int.max(0, currentStage);
-            currentStage = int.min(currentStage, numStages-1);
-            im.set_inputString(stages[currentStage].inputString);
-            stageStack.set_visible_child(stages[currentStage].get_view());
+    public void switch_stage_editing(int switchDirection, bool addLabel = true) {
+        if (stages[currentStage].active) return;
+
+        int prevStage = currentStage;
+        int newStage = prevStage + switchDirection;
+        if (newStage < 0 || newStage >= numStages) {
+            newStage = prevStage;
+        } else if (addLabel) {
+            // it is a little wasteful to try to add it every time there is a switching of stages
+            // but doing it with minimum checking would add too much complexity
+            add_label();
         }
+        // have to wait to assign to currentStage so that possible call to add_label will
+        // have the stage we are switching from still set as the currentStage
+        currentStage = newStage;
+
+        im.set_inputString(stages[currentStage].inputString);
+        stageStack.set_visible_child(stages[currentStage].get_view());
     }
 
-    public Box get_view() { return this.timerView; }
-
-    public void start() {
-        if (started) return;
-
-        if (!stages[currentStage].active) {
-            if (currentStage == numStages - 1 && !restarted) {
-                if (numStages > 1) {
-                    stageLabels.pack_start(new Label("\u2022"), false, false, 5);
-                }
-                stageLabels.pack_start(stages[currentStage].label, false, false, 5);
-                timerView.show_all();
-            }
-            currentStage = 0;
-            stageStack.set_visible_child(stages[currentStage].get_view());
-            started = true;
-            // allows for proper editing of the stage when paused
-            if (!doSeconds) {
-                toggle_seconds();
-                im.toggle_seconds();
-            }
-            set_active();
+    private void add_label() {
+        var labels = stageLabels.get_children();
+        for (int i = 0; i < labels.length(); i++) {
+            if (stages[currentStage].labelBox == labels.nth_data(i)) return;
         }
+
+        if (currentStage != 0 && stages[currentStage].labelDot == null) {
+            stages[currentStage].labelDot = new Label("\u2022");
+            stages[currentStage].labelBox.pack_start(stages[currentStage].labelDot, false, false, 0);
+        }
+        stages[currentStage].labelBox.pack_start(stages[currentStage].label, false, false, 0);
+        stageLabels.pack_start(stages[currentStage].labelBox, false, false, 0);
+        stageLabels.reorder_child(stages[currentStage].labelBox, currentStage);
+        stageLabels.show_all();
+    }
+
+    private void remove_label() {
+        var labels = stageLabels.get_children();
+        for (int i = 0; i < labels.length(); i++) {
+            if (stages[currentStage].labelBox == labels.nth_data(i)) {
+                stageLabels.remove(stages[currentStage].labelBox);
+                if (currentStage == 0 && numStages > 1 && stages[currentStage+1].labelDot != null) {
+                    stages[currentStage+1].labelBox.remove(stages[currentStage+1].labelDot);
+                    stages[currentStage+1].labelDot = null;
+                }
+            }
+        }
+        stageLabels.show_all();
     }
 
     public void toggle_active() {
@@ -198,30 +250,30 @@ public class PTimer {
     }
 
     public void set_active() {
-        if (started) {
-            if (stageStack.get_visible_child() != stages[currentStage].get_view()) {
-                stageStack.set_visible_child(stages[currentStage].get_view());
-            }
-            if (!stages[currentStage].active) {
-                Timeout.add(0, update_time);
-            }
-            stages[currentStage].set_active();
-            ta.set_active();
+        if (!started) return;
+
+        if (stageStack.get_visible_child() != stages[currentStage].get_view()) {
+            stageStack.set_visible_child(stages[currentStage].get_view());
         }
+        if (!stages[currentStage].active) {
+            Timeout.add(0, update_time);
+        }
+        stages[currentStage].set_active();
+        ta.set_active();
     }
 
     public void set_inactive() {
-        if (started) {
-            stages[currentStage].set_inactive();
-            
-            // set the inputString of the inputManager as though we had
-            // typed out the currently displaying time so it can be edited
-            string s = stages[currentStage].string_from_timeLeft();
-            stages[currentStage].inputString = s;
-            im.set_inputString(s);
-            
-            ta.set_inactive();
-        }
+        if (!started) return;
+
+        stages[currentStage].set_inactive();
+        
+        // set the inputString of the inputManager as though we had
+        // typed out the timeLeft being display so it can be edited
+        string s = stages[currentStage].string_from_timeLeft();
+        stages[currentStage].inputString = s;
+        im.set_inputString(s);
+        
+        ta.set_inactive();
     }
 
     // called by inputManager, does not change inputManager's doSeconds
@@ -237,12 +289,6 @@ public class PTimer {
         }
     }
 
-    public void toggle_repeat() { repeatBut.set_active(!repeatBut.get_active()); }
-
-    public void toggle_notification() { notificationBut.set_active(!notificationBut.get_active()); }
-
-    public void toggle_volume() { volumeBut.set_active(!volumeBut.get_active()); }
-
     public void reset_timer() {
         started = false;
         restarted = true;
@@ -254,10 +300,28 @@ public class PTimer {
         ta.update_stages(numStages);
     }
 
-    /*  public void delete_stage(int stage) {
-        stageLabels
-    }   */  
-     
+    public void delete_stage() {
+        if (stages[currentStage].active) return;
+
+        remove_label();
+        stageColors.push_head(stages[currentStage].color);
+        stageStack.remove(stages[currentStage].get_view());
+        started = false;
+
+        if (numStages == 1) {
+            stages[currentStage] = new Stage(stageColors.pop_head(), doSeconds);
+            stageStack.add(stages[currentStage].get_view());
+        } else {
+            for (int i = currentStage; i < numStages - 1; i++) {
+                stages[i] = stages[i + 1];
+            }
+            numStages--;
+        }
+
+        ta.update_stages(numStages);
+        stageStack.show_all();
+        switch_stage_editing(-1, false);
+    }     
     
     private bool update_time() {
         if (!stages[currentStage].active) return false;
@@ -296,6 +360,14 @@ public class PTimer {
         }
         return false;
     }
+
+    public void toggle_repeat() { repeatBut.set_active(!repeatBut.get_active()); }
+
+    public void toggle_notification() { notificationBut.set_active(!notificationBut.get_active()); }
+
+    public void toggle_volume() { volumeBut.set_active(!volumeBut.get_active()); }
+
+    public Box get_view() { return this.timerView; }
 }
 
 } // end namespace

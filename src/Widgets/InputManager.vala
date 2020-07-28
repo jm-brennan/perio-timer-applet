@@ -3,7 +3,7 @@ using GLib;
 namespace PerioTimer.Widgets {
 
 enum KeyCode {
-    DELETE = 65535
+    DELETE = 65535,
     RIGHT  = 65363,
     LEFT   = 65361,
     ENTER  = 65293,
@@ -33,6 +33,9 @@ public class InputManager {
     public void keypress(Gdk.EventKey event) {
         Gdk.ModifierType modifiers = Gtk.accelerator_get_default_mod_mask();
         switch (event.keyval) {
+            case KeyCode.DELETE:
+                timer.delete_stage();
+                break;
             case KeyCode.RIGHT:
                 if ((event.state & modifiers) == Gdk.ModifierType.CONTROL_MASK) {
                     mp.switch_timer(1);
