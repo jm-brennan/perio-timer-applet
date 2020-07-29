@@ -20,3 +20,4 @@ podir = join_paths(meson.source_root(), 'po')
 APPLET_INSTALL_DIR = join_paths(libdir, 'budgie-desktop', 'plugins', meson.project_name())
 
 subdir('src')
+subdir('style')

@@ -1,8 +1,8 @@
 [Plugin]
 Module=libperiotimer.so
 Name=Perio Timer
-_Description=Repeatable Timer Tool
+Description=Repeatable Timer Tool
 Authors=Jacob Brennan
 Copyright=Copyright © 2020 Jacob Brennan
 Website=https://github.com/jm-brennan/perio-timer
-Icon=alarm-symbolic
+Icon=appointment-soon-symbolic

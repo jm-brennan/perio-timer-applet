@@ -32,7 +32,7 @@ public class PTimer {
 
     private ToggleButton volumeBut = null;
     private Image volumeImOn = new Image.from_icon_name("audio-volume-high-symbolic", IconSize.MENU);
-    private Image volumeImOff = new Image.from_icon_name("audio-volume-muted-symbolic", IconSize.MENU);
+    private Image volumeImOff = new Image.from_icon_name("perioTimer-audio-volume-muted-symbolic", IconSize.MENU);
 
     private Button stageLeft = null;
     private Image stageLeftDelete = new Image.from_icon_name("list-remove-symbolic", IconSize.MENU);
@@ -383,7 +383,32 @@ public class PTimer {
         ta.update_stages(numStages);
         stageStack.show_all();
         switch_stage_editing(-1, false);
-    }     
+    }
+
+    private void notify(string body) {
+        if (!notificationBut.get_active()) return;
+
+        string summary = "Timer (%s) done".printf(stages[currentStage].label.get_label());
+        var cmd = "notify-send -a 'Perio Timer Applet' -i appointment-soon-symbolic '%s' '%s'".printf(summary, body);
+        try {
+            Process.spawn_command_line_async(cmd);
+        } catch (GLib.SpawnError e) {
+            stderr.printf("Error spawning notify process: %d\n", e.code);
+            return;
+        }
+    }
+
+    private void sound() {
+        if (!volumeBut.get_active()) return;
+
+        var cmd = "paplay /usr/share/sounds/freedesktop/stereo/complete.oga";
+        try {
+            Process.spawn_command_line_async(cmd);
+        } catch (GLib.SpawnError e) {
+            stderr.printf("Error playing sound: %d\n", e.code);
+            return;
+        }
+    }
     
     private bool update_time() {
         if (!stages[currentStage].active) return false;
@@ -398,10 +423,12 @@ public class PTimer {
             // or coming to true end
             set_inactive();
 
+            string notifyBody = "";
             if (currentStage < numStages - 1) {
                 // increment before timeout so that play can be pressed before the timeout
                 // executes and it'll work properly
                 currentStage++;
+                notifyBody = "Up next: %s.".printf(stages[currentStage].label.get_label());
                 //stageStack.set_visible_child(stages[currentStage].get_view());
                 Timeout.add(timeToSwitchStage, () => {
                     set_active();
@@ -409,6 +436,7 @@ public class PTimer {
                 });
             } else if (repeatBut.get_active()) {
                 reset_timer();
+                notifyBody = "Resetting timer. Up next: %s.".printf(stages[currentStage].label.get_label());
                 Timeout.add(timeToRepeat, () => {
                     start();
                     return false;
@@ -419,6 +447,8 @@ public class PTimer {
                     return false;
                 });
             }
+            notify(notifyBody);
+            sound();
         }
         return false;
     }

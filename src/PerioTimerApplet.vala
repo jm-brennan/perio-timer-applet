@@ -77,7 +77,7 @@ public class Applet : Budgie.Applet {
         );
 
         event_box = new Gtk.EventBox();
-        Gtk.Image icon = new Gtk.Image.from_icon_name("alarm-symbolic", Gtk.IconSize.MENU);
+        Gtk.Image icon = new Gtk.Image.from_icon_name("appointment-soon-symbolic", Gtk.IconSize.MENU);
         event_box.add(icon);
 
         popover = new MainPopover(event_box, 282, 300);
