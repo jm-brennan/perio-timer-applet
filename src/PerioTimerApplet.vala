@@ -24,6 +24,9 @@ public class Applet : Budgie.Applet {
         // of the textview widget. It does not make sense but thats apparently just how gtk works.
         // @TODO All css styling stuff should be in a file
         var style = """
+                stackswitcher.ptimer button label {
+                    font-family: lato;
+                }
                 textview {
                     font-family: lato;
                     font-weight: 300;

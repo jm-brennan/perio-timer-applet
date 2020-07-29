@@ -56,7 +56,7 @@ public class PTimer {
     private int numStages = 1;
     private GLib.Queue<int> stageColors = new GLib.Queue<int>();
 
-    public PTimer(int width, int height, int colorset, MainPopover parent) {
+    public PTimer(int width, int height, MainPopover parent) {
         im = new InputManager(this, parent);
 
         stageColors.push_head(3);
@@ -241,6 +241,29 @@ public class PTimer {
         stageStack.set_visible_child(stages[currentStage].get_view());
     }
 
+    public void delete_stage() {
+        if (stages[currentStage].active) return;
+
+        remove_label();
+        stageColors.push_head(stages[currentStage].color);
+        stageStack.remove(stages[currentStage].get_view());
+        started = false;
+
+        if (numStages == 1) {
+            stages[currentStage] = new Stage(stageColors.pop_head(), doSeconds);
+            stageStack.add(stages[currentStage].get_view());
+        } else {
+            for (int i = currentStage; i < numStages - 1; i++) {
+                stages[i] = stages[i + 1];
+            }
+            numStages--;
+        }
+
+        ta.update_stages(numStages);
+        stageStack.show_all();
+        switch_stage_editing(-1, false);
+    }
+
     public void switch_stage_editing(int switchDirection, bool addLabel = true) {
         if (stages[currentStage].active) return;
 
@@ -290,7 +313,9 @@ public class PTimer {
         }
         stageLabels.show_all();
     }
-
+    
+    public bool get_active() { return stages[currentStage].active; }
+    
     public void toggle_active() {
         if (stages[currentStage].active) {
             set_inactive();
@@ -360,29 +385,6 @@ public class PTimer {
         currentStage = 0;
         stageStack.set_visible_child(stages[currentStage].get_view());
         ta.update_stages(numStages);
-    }
-
-    public void delete_stage() {
-        if (stages[currentStage].active) return;
-
-        remove_label();
-        stageColors.push_head(stages[currentStage].color);
-        stageStack.remove(stages[currentStage].get_view());
-        started = false;
-
-        if (numStages == 1) {
-            stages[currentStage] = new Stage(stageColors.pop_head(), doSeconds);
-            stageStack.add(stages[currentStage].get_view());
-        } else {
-            for (int i = currentStage; i < numStages - 1; i++) {
-                stages[i] = stages[i + 1];
-            }
-            numStages--;
-        }
-
-        ta.update_stages(numStages);
-        stageStack.show_all();
-        switch_stage_editing(-1, false);
     }
 
     private void notify(string body) {

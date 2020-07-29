@@ -34,7 +34,11 @@ public class InputManager {
         Gdk.ModifierType modifiers = Gtk.accelerator_get_default_mod_mask();
         switch (event.keyval) {
             case KeyCode.DELETE:
-                timer.delete_stage();
+                if ((event.state & modifiers) == Gdk.ModifierType.CONTROL_MASK) {
+                    mp.delete_timer();
+                } else {
+                    timer.delete_stage();
+                }
                 break;
             case KeyCode.RIGHT:
                 if ((event.state & modifiers) == Gdk.ModifierType.CONTROL_MASK) {
@@ -57,7 +61,11 @@ public class InputManager {
                 // so that trying to alt-tab out of the applet doesn't make a new stage
                 // MOD1_MASK is (usually) alt according to docs
                 if ((event.state & modifiers) == Gdk.ModifierType.MOD1_MASK) break;
-                add_stage();
+                if ((event.state & modifiers) == Gdk.ModifierType.CONTROL_MASK) {
+                    mp.add_timer();
+                } else {
+                    add_stage();
+                }
                 break;
             case KeyCode.BACK:
                 backspace();
