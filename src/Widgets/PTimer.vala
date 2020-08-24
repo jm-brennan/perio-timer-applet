@@ -23,8 +23,8 @@ public class PTimer {
     // notification: default on
     // volume: default on
     private ToggleButton repeatBut = null;
-    private Image repeatImOn = new Image.from_icon_name("media-playlist-repeat-symbolic", IconSize.MENU);
-    private Image repeatImOff = new Image.from_icon_name("media-playlist-consecutive-symbolic", IconSize.MENU);
+    private Image repeatImOn = new Image.from_icon_name("periotimer-repeat-active-symbolic", IconSize.MENU);
+    private Image repeatImOff = new Image.from_icon_name("periotimer-repeat-inactive-symbolic", IconSize.MENU);
 
     private ToggleButton notificationBut = null;
     private Image notificationImOn = new Image.from_icon_name("notification-alert-symbolic", IconSize.MENU);
@@ -32,7 +32,7 @@ public class PTimer {
 
     private ToggleButton volumeBut = null;
     private Image volumeImOn = new Image.from_icon_name("audio-volume-high-symbolic", IconSize.MENU);
-    private Image volumeImOff = new Image.from_icon_name("perioTimer-audio-volume-muted-symbolic", IconSize.MENU);
+    private Image volumeImOff = new Image.from_icon_name("periotimer-audio-volume-muted-symbolic", IconSize.MENU);
 
     private Button stageLeft = null;
     private Image stageLeftDelete = new Image.from_icon_name("list-remove-symbolic", IconSize.MENU);
@@ -55,8 +55,11 @@ public class PTimer {
     private int currentStage = 0;
     private int numStages = 1;
     private GLib.Queue<int> stageColors = new GLib.Queue<int>();
+    // @TODO load default from gsettings
+    private ColorManager colors = null;
 
-    public PTimer(int width, int height, MainPopover parent) {
+    public PTimer(int width, int height, MainPopover parent, ColorManager colors) {
+        this.colors = colors;
         im = new InputManager(this, parent);
 
         stageColors.push_head(3);
@@ -73,6 +76,7 @@ public class PTimer {
         overlay.set_size_request(width, height);
         overlay.set_halign(Align.CENTER);
         overlay.button_press_event.connect((e) => {
+            
             this.toggle_active();
             return true;
         });
@@ -90,7 +94,7 @@ public class PTimer {
         });  */
         
         
-        stages[0] = new Stage(stageColors.pop_head(), doSeconds);
+        stages[0] = new Stage(colors, stageColors.pop_head(), doSeconds);
         stageStack = new Stack();
         stageStack.set_transition_type(StackTransitionType.SLIDE_LEFT_RIGHT);
         stageStack.add(stages[0].get_view());
@@ -109,7 +113,7 @@ public class PTimer {
         stageLeft.set_image(stageLeftDelete);
         stageLeft.clicked.connect(() => {
             if (stages[currentStage].active) {
-                change_stage(-1);
+                skip_stage(-1);
             } else {
                 delete_stage();
             }
@@ -131,7 +135,7 @@ public class PTimer {
         stageRight.set_image(stageRightAdd);
         stageRight.clicked.connect(() => {
             if (stages[currentStage].active) {
-                change_stage(1);
+                skip_stage(1);
             } else {
                 add_stage();
             }
@@ -228,7 +232,7 @@ public class PTimer {
         currentStage++;
         numStages++;
 
-        stages[currentStage] = new Stage(stageColors.pop_head(), doSeconds);
+        stages[currentStage] = new Stage(colors, stageColors.pop_head(), doSeconds);
         stageStack.add(stages[currentStage].get_view());
 
         while (stagesToReorder.get_length() != 0) {
@@ -245,12 +249,12 @@ public class PTimer {
         if (stages[currentStage].active) return;
 
         remove_label();
-        stageColors.push_head(stages[currentStage].color);
+        stageColors.push_head(stages[currentStage].colorOrder);
         stageStack.remove(stages[currentStage].get_view());
         started = false;
 
         if (numStages == 1) {
-            stages[currentStage] = new Stage(stageColors.pop_head(), doSeconds);
+            stages[currentStage] = new Stage(colors, stageColors.pop_head(), doSeconds);
             stageStack.add(stages[currentStage].get_view());
         } else {
             for (int i = currentStage; i < numStages - 1; i++) {
@@ -284,6 +288,36 @@ public class PTimer {
         stageStack.set_visible_child(stages[currentStage].get_view());
     }
 
+    public void skip_stage(int direction) {
+        stages[currentStage].set_inactive();
+
+        if (direction > 0) {
+            stages[currentStage].end();
+            ta.reset_stage(currentStage);
+            currentStage++;
+            currentStage %= numStages;
+        } else {
+            stages[currentStage].reset();
+            ta.reset_stage(currentStage);
+            currentStage--;
+            if (currentStage < 0) { 
+                currentStage = numStages - 1;
+                for (int i = 0; i < currentStage; i++) {
+                    stages[i].end();
+                    ta.reset_stage(i);
+                }
+            }
+        }
+
+        // @TODO not sure this is necessary
+        if (currentStage == 0) {
+            reset_timer();
+            start();
+        } else {
+            set_active();
+        }
+    }
+
     private void add_label() {
         var labels = stageLabels.get_children();
         for (int i = 0; i < labels.length(); i++) {
@@ -312,6 +346,12 @@ public class PTimer {
             }
         }
         stageLabels.show_all();
+    }
+
+    public void update_theme() {
+        for (int i = 0; i < numStages; i++) {
+            stages[i].update_color_theme();
+        }
     }
     
     public bool get_active() { return stages[currentStage].active; }
@@ -359,10 +399,6 @@ public class PTimer {
         ta.set_inactive();
     }
 
-    private void change_stage(int direction) {
-        stdout.printf("skip to stage: %d\n", currentStage + direction);
-    }
-
     // called by inputManager, does not change inputManager's doSeconds
     public void toggle_seconds() {
         if (stages[currentStage].active) return;
@@ -384,6 +420,7 @@ public class PTimer {
         }
         currentStage = 0;
         stageStack.set_visible_child(stages[currentStage].get_view());
+        // @TODO does this call need to happen at all? maybe it could just be to redraw_canvas?
         ta.update_stages(numStages);
     }
 
@@ -395,7 +432,7 @@ public class PTimer {
         try {
             Process.spawn_command_line_async(cmd);
         } catch (GLib.SpawnError e) {
-            stderr.printf("Error spawning notify process: %d\n", e.code);
+            stderr.printf("Error spawning notify process: %s\n", e.message);
             return;
         }
     }
@@ -407,7 +444,7 @@ public class PTimer {
         try {
             Process.spawn_command_line_async(cmd);
         } catch (GLib.SpawnError e) {
-            stderr.printf("Error playing sound: %d\n", e.code);
+            stderr.printf("Error playing sound: %s\n", e.message);
             return;
         }
     }

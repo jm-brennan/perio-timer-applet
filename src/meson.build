@@ -9,15 +9,11 @@ custom_target(
     install_dir: APPLET_INSTALL_DIR
 )
 
-data_dir = join_paths(meson.source_root(), 'data')
-
-#gresource_file = join_paths(data_dir, 'com.github.EbonJaeger.budgie-trash-applet.gresource.xml')
-#res = gnome.compile_resources('bta-resources', gresource_file, source_dir: data_dir)
-
 applet_deps = [
     dep_budgie,
     dep_gtk3,
-    dep_glib
+    dep_glib,
+    dep_json
 ]
 
 applet_sources =[
@@ -26,12 +22,15 @@ applet_sources =[
     'Widgets/Stage.vala',
     'Widgets/MainPopover.vala',
     'Widgets/TimerAnimation.vala',
-    'Widgets/InputManager.vala'
+    'Widgets/InputManager.vala',
+    'Widgets/Colors.vala',
+    gresources
 ]
 
 vala_args = [
     '--pkg', 'gtk+-3.0',
-    '--pkg', 'glib-2.0'
+    '--pkg', 'glib-2.0',
+    '--pkg', 'json-glib-1.0'
 ]
 
 shared_library(

@@ -31,6 +31,7 @@ public class InputManager {
     }
 
     public void keypress(Gdk.EventKey event) {
+        // MOD1_MASK is (usually) alt according to docs
         Gdk.ModifierType modifiers = Gtk.accelerator_get_default_mod_mask();
         switch (event.keyval) {
             case KeyCode.DELETE:
@@ -43,13 +44,17 @@ public class InputManager {
             case KeyCode.RIGHT:
                 if ((event.state & modifiers) == Gdk.ModifierType.CONTROL_MASK) {
                     mp.switch_timer(1);
-                } else {
+                } else if ((event.state & modifiers) == Gdk.ModifierType.MOD1_MASK) {
+                    timer.skip_stage(1);
+                }  else {
                     timer.switch_stage_editing(1);
                 }
                 break;
             case KeyCode.LEFT:
                 if ((event.state & modifiers) == Gdk.ModifierType.CONTROL_MASK) {
                     mp.switch_timer(-1);
+                } else if ((event.state & modifiers) == Gdk.ModifierType.MOD1_MASK) {
+                    timer.skip_stage(-1);
                 } else {
                     timer.switch_stage_editing(-1);
                 }
@@ -59,7 +64,6 @@ public class InputManager {
                 break;
             case KeyCode.TAB:
                 // so that trying to alt-tab out of the applet doesn't make a new stage
-                // MOD1_MASK is (usually) alt according to docs
                 if ((event.state & modifiers) == Gdk.ModifierType.MOD1_MASK) break;
                 if ((event.state & modifiers) == Gdk.ModifierType.CONTROL_MASK) {
                     mp.add_timer();
@@ -111,7 +115,6 @@ public class InputManager {
                     break;
             }
         }
-        
     }
 
     public void toggle_seconds() {
@@ -124,7 +127,6 @@ public class InputManager {
                 inputString = inputString.substring(0, allowedInputLength);
             }
         }
-        
     }
     
     private void backspace() {

@@ -7,7 +7,6 @@ public class Stage {
     public int secondsLeft = 0;
     public int64 lastUpdated = 0;
     public int64 timeLeft = 0;
-    public int64 time = 0; // only used for animation
     public string inputString = "";
     
     public bool active = false;
@@ -22,47 +21,23 @@ public class Stage {
     public int hours = 0;
     public int minutes = 0;
     public int seconds = 0;
-    public int color;
-    public float r = 0.0f;
-    public float g = 0.0f;
-    public float b = 0.0f;
     
-    public Stage(int color, bool doSeconds) {
-        this.doSeconds = doSeconds;
-        this.color = color;
-        
-        // @TODO init colors from a file or something
-        string styleClass = "";
-        switch(color) {
-            case 0:
-                styleClass = "red";
-                r = 0.949f;
-                g = 0.3725f;
-                b = 0.3608f;
-                break;
-            case 1:
-                styleClass = "seagreen";
-                r = 0.0f;
-                g = 0.9922f;
-                b = 0.8627f;
-                break;
-            case 2:
-                styleClass = "yellow";
-                r = 1.0f;
-                g = 0.8784f;
-                b = 0.4f;
-                break;
-            case 3:
-                styleClass = "greensheen";
-                r = 0.4392f;
-                g = 0.7569f;
-                b = 0.702f;
-                break;
-        }
+    public int colorOrder;
+    private string colorTheme;
+    private ColorManager colors = null;
+    public Color color = {0,0,0};
 
+    // only used for animation
+    public int64 time = 0;
+    
+    public Stage(ColorManager colors, int colorOrder, bool doSeconds) {
+        this.colors = colors;
+        this.colorOrder = colorOrder;
+        this.doSeconds = doSeconds;
+        
         textView = new TextView();        
-        textView.get_style_context().add_class(styleClass);
-        textView.get_style_context().add_class("time_view");
+        update_color_theme();
+        
         textView.buffer.text = make_display_string(hours, minutes, seconds);
         textView.set_justification(Justification.CENTER);
         textView.cursor_visible = false;
@@ -73,7 +48,7 @@ public class Stage {
 
         labelBox = new Box(Orientation.HORIZONTAL, 0);
         labelBox.set_spacing(10);
-        label.get_style_context().add_class("stage_name");
+        label.get_style_context().add_class("ptimer_stage_name");
     }
 
     public void set_smh(string inputString) {
@@ -155,9 +130,9 @@ public class Stage {
             }
         }
         // @TODO i dont know what i want to show when it ends, right now its just 0s
-        /*  if (displayString == "") {
-            displayString = "DONE";   
-        }  */
+        if (forLabel && displayString == "") {
+            displayString = "0s";   
+        }
 
         return displayString;
     }
@@ -221,6 +196,14 @@ public class Stage {
         lastUpdated = currentTime;
     }
 
+    public void end() {
+        hoursLeft   = 0;
+        minutesLeft = 0;
+        secondsLeft = 0;
+        timeLeft    = 0;
+        lastUpdated = 0;
+    }
+
     public void reset() {
         hoursLeft   = hours;
         minutesLeft = minutes;
@@ -229,6 +212,17 @@ public class Stage {
         lastUpdated = 0;
         timeLeft = smh_to_unix();
         update_display();
+    }
+
+    public void update_color_theme() {
+        if (colorTheme != null) {
+            textView.get_style_context().remove_class(colorTheme);
+        }
+        ColorTheme theme = colors.get_current_theme();
+        stdout.printf("making color with theme %s, color %d\n", theme.name, colorOrder);
+        colorTheme = theme.name + colorOrder.to_string();
+        color = theme.colors[colorOrder];
+        textView.get_style_context().add_class(colorTheme);
     }
 
     public TextView get_view() {

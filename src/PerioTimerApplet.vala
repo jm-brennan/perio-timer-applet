@@ -2,6 +2,7 @@
     Creates the app as a budgie applet, just following all the same conventions/boilerplate
     as the other applets that are shipped, specifically the Nightlight applet  
 */
+using Gtk;
 using PerioTimer.Widgets;
 namespace PerioTimer {
 
@@ -12,86 +13,48 @@ public class Plugin : Budgie.Plugin, Peas.ExtensionBase {
 }
  
 public class Applet : Budgie.Applet {
-    private Gtk.EventBox event_box;
-    private MainPopover? popover = null;
+    private EventBox event_box;
+    private MainPopover? mainPopover = null;
+    private ColorManager? colors = null;
     private unowned Budgie.PopoverManager? manager = null;
     public string uuid { public set; public get; }
+    private string cssStyle;
 
     public Applet(string uuid) {
         Object(uuid: uuid);
-        Gtk.Settings.get_default().set("gtk-application-prefer-dark-theme", true);
-        // "textview" handles the actual text, while "textview text" handles the appearance
-        // of the textview widget. It does not make sense but thats apparently just how gtk works.
-        // @TODO All css styling stuff should be in a file
-        var style = """
-                stackswitcher.ptimer button label {
-                    font-family: lato;
-                }
-                textview {
-                    font-family: lato;
-                    font-weight: 300;
-                    letter-spacing: 3px;
-                    font-size: 40px;
-                }
-                label.app_title {
-                    font-family: lato;
-                    font-size: 15px;
-                    opacity: 0.75;
-                }
-                label.stage_name {
-                    font-family: lato;
-                    font-size: 15px;
-                    opacity: 0.75;
-                }
-                textview.red text {
-                    border-bottom-width: 3px;
-                    border-bottom-style: solid;
-                    border-bottom-color: #F25F5C;
-                }
-                textview.seagreen text {
-                    border-bottom-width: 3px;
-                    border-bottom-style: solid;
-                    border-bottom-color: #00FDDC;
-                }
-                textview.yellow text {
-                    border-bottom-width: 3px;
-                    border-bottom-style: solid;
-                    border-bottom-color: #FFE066;
-                }
-                textview.greensheen text {
-                    border-bottom-width: 3px;
-                    border-bottom-style: solid;
-                    border-bottom-color: #70C1B3;
-                }
-            """;
-
-        var css_provider = new Gtk.CssProvider();
-
+        // @TODO i beleive this doesn't work because this applet is not its own gtk application
+        // and will instead follow the rules set by the taskbar. Is there any way to enforce dark mode?
+        //Settings.get_for_screen(Gdk.Screen.get_default()).set("gtk-application-prefer-dark-theme", true);
+        
+        // load css from gresource file to set general css stuff, but does not
+        // handle the colors of the stages which is controlled by the ColorSettings
         try {
-            css_provider.load_from_data(style, -1);
+            var cssProvider = new CssProvider();
+            cssProvider.load_from_resource("/data/style/style.css");
+            StyleContext.add_provider_for_screen(
+                Gdk.Screen.get_default(),
+                cssProvider,
+                STYLE_PROVIDER_PRIORITY_APPLICATION
+            );
         } catch (GLib.Error e) {
-            warning ("Failed to parse css style : %s", e.message);
+            warning("Failed to parse css style : %s", e.message);
         }
 
-        Gtk.StyleContext.add_provider_for_screen(
-                Gdk.Screen.get_default (),
-                css_provider,
-                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        );
+        ColorManager colors = new ColorManager();
 
-        event_box = new Gtk.EventBox();
-        Gtk.Image icon = new Gtk.Image.from_icon_name("appointment-soon-symbolic", Gtk.IconSize.MENU);
+        event_box = new EventBox();
+        Image icon = new Image.from_icon_name("appointment-soon-symbolic", IconSize.MENU);
         event_box.add(icon);
 
-        popover = new MainPopover(event_box, 282, 300);
+        mainPopover = new MainPopover(event_box, 282, 300, colors);
         this.add(event_box);
         this.show_all();
 
         // clicking on applet icon in panel opens main popover
         event_box.button_press_event.connect((e)=> {
             if (e.button == 1) {
-                if (popover.get_visible()) {
-                    popover.hide();
+                if (mainPopover.get_visible()) {
+                    mainPopover.hide();
                 } else {
                     this.manager.show_popover(event_box);
                 }
@@ -104,16 +67,16 @@ public class Applet : Budgie.Applet {
     }
 
     public override void update_popovers(Budgie.PopoverManager? manager) {
-        manager.register_popover(event_box, popover);
+        manager.register_popover(event_box, mainPopover);
         this.manager = manager;
     }
 }
  
 } // end namespace
 
+// boilerplate - all applets need this
 [ModuleInit]
 public void peas_register_types(TypeModule module) {
-    // boilerplate - all modules need this
     var objmodule = module as Peas.ObjectModule;
     objmodule.register_extension_type(typeof(Budgie.Plugin), typeof(PerioTimer.Plugin));
 }

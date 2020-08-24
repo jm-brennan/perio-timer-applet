@@ -13,7 +13,6 @@ public class TimerAnimation : Gtk.Widget {
     private int numStages = 1;
     private double[] degreesPastLastUpdate = new double[4];
 
-    
     public TimerAnimation(int width, int height, Stage[] stages) {
         set_has_window(false);
         this.width = width;
@@ -32,7 +31,11 @@ public class TimerAnimation : Gtk.Widget {
         redraw_canvas();
     }
 
-    private bool update () {
+    public void reset_stage(int stage) {
+        degreesPastLastUpdate[stage] = 0.0;
+    }
+
+    private bool update() {
         if (active) redraw_canvas();
         return active;
     }
@@ -49,8 +52,7 @@ public class TimerAnimation : Gtk.Widget {
         window.process_updates(true);
     }
 
-    public override bool draw(Cairo.Context cr) {    
-        //stdout.printf("start draw %d\n", counter); 
+    public override bool draw(Cairo.Context cr) {
         int xc = width / 2;
         int yc = height / 2;
         int radius = (width / 2) - border;
@@ -58,7 +60,9 @@ public class TimerAnimation : Gtk.Widget {
 
         if (totalTime == 0 && !active) {
             // when nothing has been entered, draw full circle
-            cr.set_source_rgb(stages[0].r, stages[0].g, stages[0].b);
+            cr.set_source_rgb(stages[0].color.r / (double)255, 
+                              stages[0].color.g / (double)255, 
+                              stages[0].color.b / (double)255);
             cr.arc(xc, yc, radius, -90 * Math.PI/180.0, 270 * Math.PI/180.0);
             cr.stroke();
         } else {
@@ -67,7 +71,9 @@ public class TimerAnimation : Gtk.Widget {
             for (int i = 0; i < numStages; i++) {
                 arcEnd = arcStart - (360.0 * (stages[i].time / (double)totalTime));
                 if (stages[i].timeLeft > 0) {
-                    cr.set_source_rgb(stages[i].r, stages[i].g, stages[i].b);
+                    cr.set_source_rgb(stages[i].color.r / (double)255, 
+                                      stages[i].color.g / (double)255, 
+                                      stages[i].color.b / (double)255);
                     // subtract off degrees known to have been covered, calculated
                     // as a porportion of how much time is left on the stage over the total time
                     // for that stage.
@@ -92,7 +98,7 @@ public class TimerAnimation : Gtk.Widget {
         return true;
     }
     
-    public void set_inactive() { 
+    public void set_inactive() {
         if (!active) return;
 
         for (int i = 0; i < numStages; i++) {
@@ -102,7 +108,7 @@ public class TimerAnimation : Gtk.Widget {
         redraw_canvas();
     }
 
-    public void set_active() {  
+    public void set_active() {
         if (active) return;
 
         active = true;

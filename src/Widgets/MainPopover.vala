@@ -17,17 +17,19 @@ public class MainPopover : Budgie.Popover {
     private int currentTimer = 0;
     private int numTimers = 1;
     private const int MAX_TIMERS = 4;
+    private ColorManager colors = null;
 
-    public MainPopover(Widget? window_parent, int width, int height) {
+    public MainPopover(Widget? window_parent, int width, int height, ColorManager colors) {
         /*  
             The main popover consists of a vertical box that contains a header, a stack
             switcher, and a stack of PTimers. It manages which timer is being shown and 
-            the creation/deletion (@TODO) of new timers  
+            the creation/deletion of new timers  
         */
 
         Object(relative_to: window_parent);
         this.width = width;
         this.height = height;
+        this.colors = colors;
         this.set_resizable(false);
         add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK);
         add_events(Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK);
@@ -38,7 +40,7 @@ public class MainPopover : Budgie.Popover {
         header = new Box(Orientation.HORIZONTAL, 0);
         header.height_request = 10;
         headerLabel = new Label("Perio Timer");
-        headerLabel.get_style_context().add_class("app_title");
+        headerLabel.get_style_context().add_class("ptimer_title");
         header.pack_start(headerLabel, false, false, 5);
 
         headerAddTimer = new Button.from_icon_name("list-add-symbolic", IconSize.MENU);
@@ -66,7 +68,7 @@ public class MainPopover : Budgie.Popover {
             currentTimer = int.parse(visibleChildName);
         });
 
-        timers[0] = new PTimer(width, height, this);
+        timers[0] = new PTimer(width, height, this, colors);
         timerStack.add_titled(timers[0].get_view(), currentTimer.to_string(), "Timer 0");
 
         mainView.pack_start(timerStack, false, false, 0);
@@ -85,7 +87,7 @@ public class MainPopover : Budgie.Popover {
         numTimers++;
 
         // @TODO make this less bad once new stack implemention is done
-        timers[currentTimer] = new PTimer(width, height, this);
+        timers[currentTimer] = new PTimer(width, height, this, colors);
         timerStack.add_titled(timers[currentTimer].get_view(), currentTimer.to_string(), "Timer " + currentTimer.to_string());
         
         mainView.show_all();
@@ -103,7 +105,7 @@ public class MainPopover : Budgie.Popover {
         currentTimer = ct;
 
         if (numTimers == 1) {
-            timers[currentTimer] = new PTimer(width, height, this);
+            timers[currentTimer] = new PTimer(width, height, this, colors);
             timerStack.add_titled(timers[currentTimer].get_view(), currentTimer.to_string(), "Timer " + currentTimer.to_string());
         } else {
             for (int i = currentTimer; i < numTimers - 1; i++) {

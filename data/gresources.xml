@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/">
+    <file>data/colors/colors.json</file>
+    <file>data/style/style.css</file>
+  </gresource>
+</gresources>
