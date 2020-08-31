@@ -6,8 +6,8 @@ public class MainPopover : Budgie.Popover {
     private Stack? timerStack = null;
     private StackSwitcher? stackSwitcher = null;
     private Box? mainView = null;
-    private Box? header = null;
-    private Label? headerLabel = null;
+    private HeaderBar? header = null;
+    private Label? headerTitle = null;
     private Button? headerAddTimer = null;
     private Button? headerDeleteTimer = null;
     private int width;
@@ -20,11 +20,9 @@ public class MainPopover : Budgie.Popover {
     private ColorManager colors = null;
 
     public MainPopover(Widget? window_parent, int width, int height, ColorManager colors) {
-        /*  
-            The main popover consists of a vertical box that contains a header, a stack
-            switcher, and a stack of PTimers. It manages which timer is being shown and 
-            the creation/deletion of new timers  
-        */
+        // The main popover consists of a vertical box that contains a header, a stack
+        // switcher, and a stack of PTimers. It manages which timer is being shown and 
+        // the creation/deletion of new timers and switching between them
 
         Object(relative_to: window_parent);
         this.width = width;
@@ -37,19 +35,22 @@ public class MainPopover : Budgie.Popover {
         mainView = new Box(Orientation.VERTICAL, 0);
         mainView.set_homogeneous(false);
 
-        header = new Box(Orientation.HORIZONTAL, 0);
-        header.height_request = 10;
-        headerLabel = new Label("Perio Timer");
-        headerLabel.get_style_context().add_class("ptimer_title");
-        header.pack_start(headerLabel, false, false, 5);
-
-        headerAddTimer = new Button.from_icon_name("list-add-symbolic", IconSize.MENU);
-        headerAddTimer.clicked.connect(this.add_timer);
-        header.pack_end(headerAddTimer, false, false, 0);
+        header = new HeaderBar();
+        var headerSettings = new Button.from_icon_name("open-menu-symbolic", IconSize.MENU);
+        header.pack_start(headerSettings);
         
-        headerDeleteTimer = new Button.from_icon_name("list-remove-symbolic", IconSize.MENU);
+        headerTitle = new Label("Perio Timer");
+        headerTitle.get_style_context().add_class("ptimer-title");
+        header.set_custom_title(headerTitle);
+
+        headerAddTimer = new Button.from_icon_name("tab-new-symbolic", IconSize.MENU);
+        headerAddTimer.clicked.connect(this.add_timer); 
+        header.pack_end(headerAddTimer);
+        
+        headerDeleteTimer = new Button.from_icon_name("window-close-symbolic", IconSize.MENU);
         headerDeleteTimer.clicked.connect(this.delete_timer);
-        header.pack_end(headerDeleteTimer, false, false, 0);
+        header.pack_end(headerDeleteTimer);
+
         mainView.pack_start(header, false, false, 0);
 
         timerStack = new Stack();

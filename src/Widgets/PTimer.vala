@@ -16,23 +16,18 @@ public class PTimer {
     private int timeToSwitchStage = 1000;
     
     private bool doSeconds = false;
+    
+    private ToggleButton volumeBut = null;
+    private Image volumeImOn = new Image.from_icon_name("periotimer-audio-volume-high-symbolic", IconSize.MENU);
+    private Image volumeImOff = new Image.from_icon_name("periotimer-audio-volume-muted-symbolic", IconSize.MENU);
 
-    // @TODO load defaults from settings
-    // button setup for timer behavior settings:
-    // repeat: default off
-    // notification: default on
-    // volume: default on
     private ToggleButton repeatBut = null;
-    private Image repeatImOn = new Image.from_icon_name("periotimer-repeat-active-symbolic", IconSize.MENU);
-    private Image repeatImOff = new Image.from_icon_name("periotimer-repeat-inactive-symbolic", IconSize.MENU);
+    private Image repeatImOn = new Image.from_icon_name("periotimer-media-playlist-repeat-rtl-symbolic", IconSize.MENU);
+    private Image repeatImOff = new Image.from_icon_name("periotimer-media-playlist-repeat-disabled-rtl-symbolic", IconSize.MENU);
 
     private ToggleButton notificationBut = null;
-    private Image notificationImOn = new Image.from_icon_name("notification-alert-symbolic", IconSize.MENU);
-    private Image notificationImOff = new Image.from_icon_name("notification-disabled-symbolic", IconSize.MENU);
-
-    private ToggleButton volumeBut = null;
-    private Image volumeImOn = new Image.from_icon_name("audio-volume-high-symbolic", IconSize.MENU);
-    private Image volumeImOff = new Image.from_icon_name("periotimer-audio-volume-muted-symbolic", IconSize.MENU);
+    private Image notificationImOn = new Image.from_icon_name("periotimer-notification-alert-symbolic", IconSize.MENU);
+    private Image notificationImOff = new Image.from_icon_name("periotimer-notification-disabled-symbolic", IconSize.MENU);
 
     private Button stageLeft = null;
     private Image stageLeftDelete = new Image.from_icon_name("list-remove-symbolic", IconSize.MENU);
@@ -46,19 +41,21 @@ public class PTimer {
     private Image stageRightAdd = new Image.from_icon_name("list-add-symbolic", IconSize.MENU);
     private Image stageRightSkip = new Image.from_icon_name("media-skip-forward-symbolic", IconSize.MENU);
 
-    // @TODO testing hvaing a text box, need to figure out input redirection
-    // public Entry te = null;
-
-    // @TODO figuring out the multi stage stuff
     private const int MAX_STAGES = 4;
     private Stage[] stages = new Stage[MAX_STAGES];
     private int currentStage = 0;
     private int numStages = 1;
     private GLib.Queue<int> stageColors = new GLib.Queue<int>();
-    // @TODO load default from gsettings
     private ColorManager colors = null;
 
     public PTimer(int width, int height, MainPopover parent, ColorManager colors) {
+        repeatImOn.set_pixel_size(16);
+        repeatImOff.set_pixel_size(16);
+        notificationImOn.set_pixel_size(16);
+        notificationImOff.set_pixel_size(16);
+        volumeImOn.set_pixel_size(16);
+        volumeImOff.set_pixel_size(16);
+    
         this.colors = colors;
         im = new InputManager(this, parent);
 
@@ -68,8 +65,6 @@ public class PTimer {
         stageColors.push_head(0);
         
         timerView = new Box(Orientation.VERTICAL, 0);
-        // @TODO input redirection
-        //timerView.set_focus_on_click(true);
         
         overlay = new Overlay();
         overlay.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK);
@@ -143,10 +138,6 @@ public class PTimer {
         stageControlView.pack_start(stageRight, false, false, 0);
         timerView.pack_start(stageControlView, true, true, 0);
 
-        // @TODO text entry for timer names? gotta figure out input redirection
-        // te = new Entry();
-        // timerView.pack_start(te, false, false, 0);
-
         stageLabels = new Box(Orientation.HORIZONTAL, 0);
         stageLabels.height_request = 20;
         stageLabels.set_halign(Align.CENTER);
@@ -154,6 +145,19 @@ public class PTimer {
         timerView.pack_start(stageLabels, true, true, 5);
 
         Box settingsView = new Box(Orientation.HORIZONTAL, 0);
+        
+        volumeBut = new ToggleButton();
+        // @TODO load from default
+        volumeBut.set_active(true);
+        volumeBut.set_image(volumeImOn);
+        volumeBut.clicked.connect(() => {
+            if (volumeBut.get_active()) {
+                volumeBut.set_image(volumeImOn);
+            } else {
+                volumeBut.set_image(volumeImOff);
+            }
+        });
+        settingsView.pack_start(volumeBut, true, false, 0);
 
         repeatBut = new ToggleButton();
         repeatBut.set_image(repeatImOff);
@@ -166,19 +170,10 @@ public class PTimer {
         });
         settingsView.pack_start(repeatBut, true, false, 0);
 
-        volumeBut = new ToggleButton();
-        volumeBut.set_image(volumeImOff);
-        volumeBut.clicked.connect(() => {
-            if (volumeBut.get_active()) {
-                volumeBut.set_image(volumeImOn);
-            } else {
-                volumeBut.set_image(volumeImOff);
-            }
-        });
-        settingsView.pack_start(volumeBut, true, false, 0);
-
         notificationBut = new ToggleButton();
-        notificationBut.set_image(notificationImOff);
+        // @TODO load from default
+        notificationBut.set_active(true);
+        notificationBut.set_image(notificationImOn);
         notificationBut.clicked.connect(() => {
             if (notificationBut.get_active()) {
                 notificationBut.set_image(notificationImOn);
@@ -270,7 +265,6 @@ public class PTimer {
 
     public void switch_stage_editing(int switchDirection, bool addLabel = true) {
         if (stages[currentStage].active) return;
-
         int prevStage = currentStage;
         int newStage = prevStage + switchDirection;
         if (newStage < 0 || newStage >= numStages) {
@@ -424,10 +418,9 @@ public class PTimer {
         ta.update_stages(numStages);
     }
 
-    private void notify(string body) {
+    private void notify(string summary, string body) {
         if (!notificationBut.get_active()) return;
 
-        string summary = "Timer (%s) done".printf(stages[currentStage].label.get_label());
         var cmd = "notify-send -a 'Perio Timer Applet' -i appointment-soon-symbolic '%s' '%s'".printf(summary, body);
         try {
             Process.spawn_command_line_async(cmd);
@@ -462,6 +455,7 @@ public class PTimer {
             // or coming to true end
             set_inactive();
 
+            string notifySummary = "Timer (%s) done".printf(stages[currentStage].label.get_label());
             string notifyBody = "";
             if (currentStage < numStages - 1) {
                 // increment before timeout so that play can be pressed before the timeout
@@ -486,7 +480,7 @@ public class PTimer {
                     return false;
                 });
             }
-            notify(notifyBody);
+            notify(notifySummary, notifyBody);
             sound();
         }
         return false;

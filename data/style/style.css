@@ -1,18 +1,18 @@
 stackswitcher.ptimer button label {
     font-family: lato;
 }
-textview {
+textview.ptimer-stage-time {
     font-family: lato;
     font-weight: 300;
     letter-spacing: 3px;
     font-size: 40px;
 }
-label.ptimer_title {
+label.ptimer-title {
     font-family: lato;
     font-size: 15px;
-    opacity: 0.75;
+    opacity: 0.80;
 }
-label.ptimer_stage_name {
+label.ptimer-stage-label {
     font-family: lato;
     font-size: 15px;
     opacity: 0.75;

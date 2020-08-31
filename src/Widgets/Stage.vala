@@ -23,7 +23,7 @@ public class Stage {
     public int seconds = 0;
     
     public int colorOrder;
-    private string colorTheme;
+    private string cssColorTheme;
     private ColorManager colors = null;
     public Color color = {0,0,0};
 
@@ -39,6 +39,7 @@ public class Stage {
         update_color_theme();
         
         textView.buffer.text = make_display_string(hours, minutes, seconds);
+        textView.get_style_context().add_class("ptimer-stage-time");
         textView.set_justification(Justification.CENTER);
         textView.cursor_visible = false;
         textView.set_editable(false);
@@ -48,7 +49,7 @@ public class Stage {
 
         labelBox = new Box(Orientation.HORIZONTAL, 0);
         labelBox.set_spacing(10);
-        label.get_style_context().add_class("ptimer_stage_name");
+        label.get_style_context().add_class("ptimer-stage-label");
     }
 
     public void set_smh(string inputString) {
@@ -215,14 +216,13 @@ public class Stage {
     }
 
     public void update_color_theme() {
-        if (colorTheme != null) {
-            textView.get_style_context().remove_class(colorTheme);
+        if (cssColorTheme != null) {
+            textView.get_style_context().remove_class(cssColorTheme);
         }
         ColorTheme theme = colors.get_current_theme();
-        stdout.printf("making color with theme %s, color %d\n", theme.name, colorOrder);
-        colorTheme = theme.name + colorOrder.to_string();
+        cssColorTheme = "ptimer-" + theme.name + colorOrder.to_string();
         color = theme.colors[colorOrder];
-        textView.get_style_context().add_class(colorTheme);
+        textView.get_style_context().add_class(cssColorTheme);
     }
 
     public TextView get_view() {

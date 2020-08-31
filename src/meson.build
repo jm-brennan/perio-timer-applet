@@ -24,6 +24,7 @@ applet_sources =[
     'Widgets/TimerAnimation.vala',
     'Widgets/InputManager.vala',
     'Widgets/Colors.vala',
+    'Widgets/SettingsMenu.vala',
     gresources
 ]
 

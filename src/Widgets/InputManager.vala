@@ -68,7 +68,7 @@ public class InputManager {
                 if ((event.state & modifiers) == Gdk.ModifierType.CONTROL_MASK) {
                     mp.add_timer();
                 } else {
-                    add_stage();
+                    timer.add_stage();
                 }
                 break;
             case KeyCode.BACK:
@@ -132,10 +132,6 @@ public class InputManager {
     private void backspace() {
         inputString = inputString.substring(0, inputString.length - 1);
         timer.set_input_time(inputString);
-    }
-
-    private void add_stage() {
-        timer.add_stage();
     }
 
     public void set_inputString(string inputString) { this.inputString = inputString; }

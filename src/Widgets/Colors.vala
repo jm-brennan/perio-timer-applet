@@ -1,4 +1,5 @@
 using Gtk;
+using GLib;
 
 namespace PerioTimer {
 
@@ -18,7 +19,6 @@ public class ColorManager : Budgie.Popover {
     private int currentTheme = 0; // @TODO load default theme from user preferences
     private int numThemes;
     private string cssStyle = "";
-    private Box box;
 
     public ColorManager() {
         load_color_file();
@@ -36,7 +36,7 @@ public class ColorManager : Budgie.Popover {
             parser.load_from_stream(colorsFile);
 
             var root = parser.get_root().get_object();
-            var colorThemes = root.get_array_member("color_themes");
+            var colorThemes = root.get_array_member("color-themes");
 
             for (int i = 0; i < colorThemes.get_length(); i++) {
                 var colorTheme = colorThemes.get_element(i).get_object();
@@ -67,7 +67,7 @@ public class ColorManager : Budgie.Popover {
 
     private void add_css_border_class(string name, int index) {
         var newClass = """
-            textview.%s text {
+            textview.ptimer-%s text {
                 border-bottom-width: 3px;
                 border-bottom-style: solid;
                 border-bottom-color: rgb(%d, %d, %d);
@@ -88,7 +88,7 @@ public class ColorManager : Budgie.Popover {
                 cssProvider,
                 STYLE_PROVIDER_PRIORITY_APPLICATION
             );
-        } catch (GLib.Error e) {
+        } catch (Error e) {
             warning("Failed to parse css style : %s", e.message);
         }
     }

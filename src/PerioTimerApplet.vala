@@ -1,8 +1,5 @@
-/*  
-    Creates the app as a budgie applet, just following all the same conventions/boilerplate
-    as the other applets that are shipped, specifically the Nightlight applet  
-*/
 using Gtk;
+using GLib;
 using PerioTimer.Widgets;
 namespace PerioTimer {
 
@@ -18,7 +15,6 @@ public class Applet : Budgie.Applet {
     private ColorManager? colors = null;
     private unowned Budgie.PopoverManager? manager = null;
     public string uuid { public set; public get; }
-    private string cssStyle;
 
     public Applet(string uuid) {
         Object(uuid: uuid);
@@ -28,19 +24,15 @@ public class Applet : Budgie.Applet {
         
         // load css from gresource file to set general css stuff, but does not
         // handle the colors of the stages which is controlled by the ColorSettings
-        try {
-            var cssProvider = new CssProvider();
-            cssProvider.load_from_resource("/data/style/style.css");
-            StyleContext.add_provider_for_screen(
-                Gdk.Screen.get_default(),
-                cssProvider,
-                STYLE_PROVIDER_PRIORITY_APPLICATION
-            );
-        } catch (GLib.Error e) {
-            warning("Failed to parse css style : %s", e.message);
-        }
+        var cssProvider = new CssProvider();
+        cssProvider.load_from_resource("/data/style/style.css");
+        StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(),
+            cssProvider,
+            STYLE_PROVIDER_PRIORITY_APPLICATION
+        );
 
-        ColorManager colors = new ColorManager();
+        colors = new ColorManager();
 
         event_box = new EventBox();
         Image icon = new Image.from_icon_name("appointment-soon-symbolic", IconSize.MENU);
