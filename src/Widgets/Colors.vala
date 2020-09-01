@@ -1,5 +1,6 @@
 using Gtk;
 using GLib;
+using PerioTimer.Widgets;
 
 namespace PerioTimer {
 
@@ -14,15 +15,71 @@ public struct ColorTheme {
     Color[] colors;
 }
 
-public class ColorManager : Budgie.Popover {
+public class ColorManager {
+    private Stack? pageStack = null;
     private ColorTheme[] themes;
     private int currentTheme = 0; // @TODO load default theme from user preferences
     private int numThemes;
     private string cssStyle = "";
+    private Box? view = null;
+    private PTimer[] timers = null;
 
-    public ColorManager() {
+    public ColorManager(Stack pageStack, PTimer[] timers) {
+        this.pageStack = pageStack;
+        this.timers = timers;
         load_color_file();
         generate_css();
+        view = new Box(Orientation.VERTICAL, 0);
+        view.set_hexpand(false);
+        var header = new HeaderBar();
+        var title = new Label("Colors");
+        title.get_style_context().add_class("ptimer-title");
+        header.set_custom_title(title);
+        var back = new Button.from_icon_name("go-previous-symbolic", IconSize.MENU);
+        back.clicked.connect(() => {
+            pageStack.set_visible_child_name("main");
+        });
+        header.pack_start(back);
+        view.pack_start(header, false, false, 0);
+
+        var radioButtonStart = new RadioButton(null); // wont ever use this one but it will define the group
+
+        for (int i = 0; i < numThemes; i++) {
+            var themeBox = new Box(Orientation.VERTICAL, 0);
+            var nameBox = new Box(Orientation.HORIZONTAL, 0);
+            var themeName = new Label(themes[i].name);
+            themeName.set_halign(Align.START);
+            themeName.get_style_context().add_class("ptimer-color-label");
+            var radio = new RadioButton.from_widget(radioButtonStart);
+            radio.set_data("themeIndex", i);
+            if (i == currentTheme) radio.set_active(true);
+            radio.toggled.connect(() => {
+                if (radio.get_active()) {
+                    currentTheme = radio.get_data("themeIndex");
+                    generate_css();
+                    for (int t = 0; t < 4; t++) {
+                        if (timers[t] != null) timers[t].update_theme();
+                    }
+                }
+            });
+            var swatches = new Box(Orientation.HORIZONTAL, 0);
+            swatches.set_hexpand(false);
+            for (int j = 0; j < 4; j++) {
+                var but = new Button();
+                but.set_size_request(-1,30);
+                add_css_swatch_class(i, j);
+                but.get_style_context().add_class("ptimer-swatch-%s".printf(themes[i].name + j.to_string()));
+                but.set_sensitive(false);
+                swatches.pack_start(but, true, true, 3);
+            }
+            nameBox.pack_start(themeName, false, false, 3);
+            nameBox.pack_end(radio, false, false, 3);
+            themeBox.pack_start(nameBox, false, false, 2);
+            themeBox.pack_start(swatches, false, false, 2);
+            view.pack_start(themeBox, false, false, 10);
+        }
+        
+        update_css();
     }
 
     public ColorTheme get_current_theme() {
@@ -79,6 +136,18 @@ public class ColorManager : Budgie.Popover {
         cssStyle += newClass;
     }
 
+    private void add_css_swatch_class(int themeIndex, int colorIndex) {
+        var newClass = """
+            button.ptimer-swatch-%s {
+                background-color: rgb(%d, %d, %d);
+            }
+            """.printf(themes[themeIndex].name + colorIndex.to_string(),
+                    themes[themeIndex].colors[colorIndex].r,
+                    themes[themeIndex].colors[colorIndex].g,
+                    themes[themeIndex].colors[colorIndex].b);
+        cssStyle += newClass;
+    }
+
     private void update_css() {
         try {
             var cssProvider = new CssProvider();
@@ -91,6 +160,10 @@ public class ColorManager : Budgie.Popover {
         } catch (Error e) {
             warning("Failed to parse css style : %s", e.message);
         }
+    }
+    
+    public Box get_view() {
+        return view;
     }
 
 }

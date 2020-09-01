@@ -3,6 +3,10 @@ using Gtk;
 namespace PerioTimer.Widgets {
 
 public class MainPopover : Budgie.Popover {
+    private Stack? pageStack = null;
+    private ColorManager? colors = null;
+    //private SettingsManager? settings = null;
+
     private Stack? timerStack = null;
     private StackSwitcher? stackSwitcher = null;
     private Box? mainView = null;
@@ -17,41 +21,53 @@ public class MainPopover : Budgie.Popover {
     private int currentTimer = 0;
     private int numTimers = 1;
     private const int MAX_TIMERS = 4;
-    private ColorManager colors = null;
 
-    public MainPopover(Widget? window_parent, int width, int height, ColorManager colors) {
-        // The main popover consists of a vertical box that contains a header, a stack
-        // switcher, and a stack of PTimers. It manages which timer is being shown and 
-        // the creation/deletion of new timers and switching between them
-
+    // The main popover consists of a vertical box that contains a header, a stack
+    // switcher, and a stack of PTimers. It manages which timer is being shown and 
+    // the creation/deletion of new timers and switching between them
+    public MainPopover(Widget? window_parent, int width, int height) {
         Object(relative_to: window_parent);
         this.width = width;
         this.height = height;
-        this.colors = colors;
         this.set_resizable(false);
         add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK);
         add_events(Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK);
         
+        pageStack = new Stack();
+        pageStack.set_transition_type(StackTransitionType.SLIDE_LEFT_RIGHT);
+                
         mainView = new Box(Orientation.VERTICAL, 0);
         mainView.set_homogeneous(false);
 
         header = new HeaderBar();
-        var headerSettings = new Button.from_icon_name("open-menu-symbolic", IconSize.MENU);
-        header.pack_start(headerSettings);
-        
         headerTitle = new Label("Perio Timer");
         headerTitle.get_style_context().add_class("ptimer-title");
         header.set_custom_title(headerTitle);
+        
+        var headerSettings = new MenuButton();
+        var menuImage = new Image.from_icon_name("open-menu-symbolic", IconSize.MENU);
+        headerSettings.set_image(menuImage);
 
+        var menu = new Gtk.Menu();
+        var colorLink = new Gtk.MenuItem.with_label("Colors");
+        var helpLink = new Gtk.MenuItem.with_label("Help");
+        colorLink.activate.connect(() => {
+            pageStack.set_visible_child_name("colors");
+        });
+        menu.add(colorLink);
+        menu.add(helpLink);
+        menu.show_all();
+        headerSettings.set_popup(menu);
+        
         headerAddTimer = new Button.from_icon_name("tab-new-symbolic", IconSize.MENU);
         headerAddTimer.clicked.connect(this.add_timer); 
-        header.pack_end(headerAddTimer);
         
         headerDeleteTimer = new Button.from_icon_name("window-close-symbolic", IconSize.MENU);
         headerDeleteTimer.clicked.connect(this.delete_timer);
+        
+        header.pack_start(headerSettings);
+        header.pack_end(headerAddTimer);
         header.pack_end(headerDeleteTimer);
-
-        mainView.pack_start(header, false, false, 0);
 
         timerStack = new Stack();
         timerStack.set_transition_type(StackTransitionType.SLIDE_LEFT_RIGHT);
@@ -69,12 +85,20 @@ public class MainPopover : Budgie.Popover {
             currentTimer = int.parse(visibleChildName);
         });
 
+        colors = new ColorManager(pageStack, timers);
         timers[0] = new PTimer(width, height, this, colors);
         timerStack.add_titled(timers[0].get_view(), currentTimer.to_string(), "Timer 0");
-
+        
+        mainView.pack_start(header, false, false, 0);
         mainView.pack_start(timerStack, false, false, 0);
-        mainView.show_all();
-        add(mainView);
+        //mainView.show_all();
+
+        pageStack.add_named(mainView, "main");
+        pageStack.add_named(colors.get_view(), "colors");
+        pageStack.set_visible_child_name("main");
+        pageStack.show_all();
+
+        add(pageStack);
     }
 
     public void add_timer() {

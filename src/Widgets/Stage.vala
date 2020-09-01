@@ -39,7 +39,10 @@ public class Stage {
         update_color_theme();
         
         textView.buffer.text = make_display_string(hours, minutes, seconds);
-        textView.get_style_context().add_class("ptimer-stage-time");
+        // @TODO this has a bug where new stages that are made will have messed up css 
+        // until the length of the display string changes. no clue. doesn't happen on 
+        // stages made in PTimer constructior
+        //textView.get_style_context().add_class("ptimer-stage-time");
         textView.set_justification(Justification.CENTER);
         textView.cursor_visible = false;
         textView.set_editable(false);
