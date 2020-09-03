@@ -48,7 +48,7 @@ public class PTimer {
     private GLib.Queue<int> stageColors = new GLib.Queue<int>();
     private ColorManager colors = null;
 
-    public PTimer(int width, int height, MainPopover parent, ColorManager colors) {
+    public PTimer(MainPopover parent, ColorManager colors, int width, int height) {
         repeatImOn.set_pixel_size(16);
         repeatImOff.set_pixel_size(16);
         notificationImOn.set_pixel_size(16);
@@ -105,6 +105,7 @@ public class PTimer {
         stageControlView.set_halign(Align.CENTER);
         stageControlView.set_spacing(20);
         stageLeft = new Button();
+        stageLeft.set_tooltip_text("Delete Stage");
         stageLeft.set_image(stageLeftDelete);
         stageLeft.clicked.connect(() => {
             if (stages[currentStage].active) {
@@ -116,6 +117,7 @@ public class PTimer {
         stageControlView.pack_start(stageLeft, false, false, 0);
 
         stageCenter = new Button();
+        stageCenter.set_tooltip_text("Play");
         stageCenter.set_image(stageCenterPlay);
         stageCenter.clicked.connect(() => {
             if (started) {
@@ -127,6 +129,7 @@ public class PTimer {
         stageControlView.pack_start(stageCenter, false, false, 0);
         
         stageRight = new Button();
+        stageRight.set_tooltip_text("New Stage");
         stageRight.set_image(stageRightAdd);
         stageRight.clicked.connect(() => {
             if (stages[currentStage].active) {
@@ -147,6 +150,7 @@ public class PTimer {
         Box settingsView = new Box(Orientation.HORIZONTAL, 0);
         
         volumeBut = new ToggleButton();
+        volumeBut.set_tooltip_text("Toggle Sound");
         // @TODO load from default
         volumeBut.set_active(true);
         volumeBut.set_image(volumeImOn);
@@ -160,6 +164,7 @@ public class PTimer {
         settingsView.pack_start(volumeBut, true, false, 0);
 
         repeatBut = new ToggleButton();
+        repeatBut.set_tooltip_text("Toggle Repeat");
         repeatBut.set_image(repeatImOff);
         repeatBut.clicked.connect(() => {
             if (repeatBut.get_active()) {
@@ -171,6 +176,7 @@ public class PTimer {
         settingsView.pack_start(repeatBut, true, false, 0);
 
         notificationBut = new ToggleButton();
+        notificationBut.set_tooltip_text("Toggle Notification");
         // @TODO load from default
         notificationBut.set_active(true);
         notificationBut.set_image(notificationImOn);
@@ -213,7 +219,7 @@ public class PTimer {
         
         add_label();
         started = false;
-
+        
         // because the stageStack is an actual stack, can't just insert a new stage
         // into the middle of it. Have to pop off all the elements past the insertion
         // point and add them back on after making/adding the new stage
@@ -223,10 +229,10 @@ public class PTimer {
             stagesToReorder.push_head(i);
             stageStack.remove(stages[i].get_view());
         }
-
+        
         currentStage++;
         numStages++;
-
+        
         stages[currentStage] = new Stage(colors, stageColors.pop_head(), doSeconds);
         stageStack.add(stages[currentStage].get_view());
 
@@ -315,27 +321,35 @@ public class PTimer {
     private void add_label() {
         var labels = stageLabels.get_children();
         for (int i = 0; i < labels.length(); i++) {
-            if (stages[currentStage].labelBox == labels.nth_data(i)) return;
+            var labelEventBox = (EventBox)labels.nth_data(i);
+            if (stages[currentStage].get_label() == labelEventBox.get_child()) return;
         }
 
-        if (currentStage != 0 && stages[currentStage].labelDot == null) {
-            stages[currentStage].labelDot = new Label("\u2022");
-            stages[currentStage].labelBox.pack_start(stages[currentStage].labelDot, false, false, 0);
+        // if its a dot-able stage and that stage does not already have a dot
+        if (currentStage != 0 && stages[currentStage].get_label().get_children().length() < 2) {
+            stages[currentStage].add_label_dot();
         }
-        stages[currentStage].labelBox.pack_start(stages[currentStage].label, false, false, 0);
-        stageLabels.pack_start(stages[currentStage].labelBox, false, false, 0);
-        stageLabels.reorder_child(stages[currentStage].labelBox, currentStage);
+        var eventBox = new EventBox();
+        eventBox.set_data("listOrder", currentStage);
+        eventBox.button_press_event.connect(() => {
+            int listOrder = eventBox.get_data("listOrder");
+            switch_stage_editing(listOrder - currentStage);
+            return false;
+        });
+        eventBox.add(stages[currentStage].get_label());
+        stageLabels.pack_start(eventBox);
+        stageLabels.reorder_child(eventBox, currentStage);
         stageLabels.show_all();
     }
 
     private void remove_label() {
         var labels = stageLabels.get_children();
         for (int i = 0; i < labels.length(); i++) {
-            if (stages[currentStage].labelBox == labels.nth_data(i)) {
-                stageLabels.remove(stages[currentStage].labelBox);
-                if (currentStage == 0 && numStages > 1 && stages[currentStage+1].labelDot != null) {
-                    stages[currentStage+1].labelBox.remove(stages[currentStage+1].labelDot);
-                    stages[currentStage+1].labelDot = null;
+            var labelEventBox = (EventBox)labels.nth_data(i);
+            if (stages[currentStage].get_label() == labelEventBox.get_child()) {
+                stageLabels.remove(labelEventBox);
+                if (currentStage == 0 && numStages > 1 && stages[currentStage+1].get_label().get_children().length() == 2) {
+                    stages[currentStage+1].remove_label_dot();
                 }
             }
         }
@@ -362,8 +376,11 @@ public class PTimer {
         if (!started) return;
 
         stageLeft.set_image(stageLeftSkip);
+        stageLeft.set_tooltip_text("Skip To Previous");
         stageCenter.set_image(stageCenterPause);
+        stageCenter.set_tooltip_text("Pause");
         stageRight.set_image(stageRightSkip);
+        stageRight.set_tooltip_text("Skip To Next");
 
         if (stageStack.get_visible_child() != stages[currentStage].get_view()) {
             stageStack.set_visible_child(stages[currentStage].get_view());
@@ -379,8 +396,11 @@ public class PTimer {
         if (!started) return;
 
         stageLeft.set_image(stageLeftDelete);
+        stageLeft.set_tooltip_text("New Stage");
         stageCenter.set_image(stageCenterPlay);
+        stageCenter.set_tooltip_text("Play");
         stageRight.set_image(stageRightAdd);
+        stageRight.set_tooltip_text("Delete Stage");
 
         stages[currentStage].set_inactive();
         
@@ -455,13 +475,13 @@ public class PTimer {
             // or coming to true end
             set_inactive();
 
-            string notifySummary = "Timer (%s) done".printf(stages[currentStage].label.get_label());
+            string notifySummary = "Timer (%s) done".printf(stages[currentStage].get_label_string());
             string notifyBody = "";
             if (currentStage < numStages - 1) {
                 // increment before timeout so that play can be pressed before the timeout
                 // executes and it'll work properly
                 currentStage++;
-                notifyBody = "Up next: %s.".printf(stages[currentStage].label.get_label());
+                notifyBody = "Up next: %s.".printf(stages[currentStage].get_label_string());
                 //stageStack.set_visible_child(stages[currentStage].get_view());
                 Timeout.add(timeToSwitchStage, () => {
                     set_active();
@@ -469,7 +489,7 @@ public class PTimer {
                 });
             } else if (repeatBut.get_active()) {
                 reset_timer();
-                notifyBody = "Resetting timer. Up next: %s.".printf(stages[currentStage].label.get_label());
+                notifyBody = "Resetting timer. Up next: %s.".printf(stages[currentStage].get_label_string());
                 Timeout.add(timeToRepeat, () => {
                     start();
                     return false;

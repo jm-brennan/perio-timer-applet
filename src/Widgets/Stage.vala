@@ -10,11 +10,10 @@ public class Stage {
     public string inputString = "";
     
     public bool active = false;
-    // @TODO load doSeconds from settings
     public bool doSeconds = false;
-    public Box? labelBox = null;
-    public Label? label = new Label("0s");
-    public Label? labelDot = null;
+    private Box? labelBox = null;
+    private Label? label = new Label("0s");
+    private Label? labelDot = null;
     
     private TextView? textView = null;
     private string[] smh = new string[3];
@@ -53,6 +52,7 @@ public class Stage {
         labelBox = new Box(Orientation.HORIZONTAL, 0);
         labelBox.set_spacing(10);
         label.get_style_context().add_class("ptimer-stage-label");
+        labelBox.pack_end(label, false, false, 0); // pack end so that dot can be added to start
     }
 
     public void set_smh(string inputString) {
@@ -179,6 +179,16 @@ public class Stage {
         secondsLeft = (int)(timeLeftSeconds - (3600 * hoursLeft) - (minutesLeft*60));
     }
 
+    public void add_label_dot() {
+        labelDot = new Label("\u2022");
+        labelBox.pack_start(labelDot, false, false, 0);
+    }
+
+    public void remove_label_dot() {
+        labelBox.remove(labelDot);
+        labelDot = null;
+    }
+
     public void set_active() {
         if (active) return;
         active = true;
@@ -230,6 +240,14 @@ public class Stage {
 
     public TextView get_view() {
         return textView;
+    }
+
+    public Box get_label() {
+        return labelBox;
+    }
+
+    public string get_label_string() {
+        return label.get_label();
     }
 
 }
