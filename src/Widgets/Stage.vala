@@ -15,7 +15,9 @@ public class Stage {
     private Label? label = new Label("0s");
     private Label? labelDot = null;
     
+    private Box? textBox = null;
     private TextView? textView = null;
+    //private TextView[] textViews = new TextView[6];
     private string[] smh = new string[3];
     public int hours = 0;
     public int minutes = 0;
@@ -34,21 +36,20 @@ public class Stage {
         this.colorOrder = colorOrder;
         this.doSeconds = doSeconds;
         
-        textView = new TextView();        
+        textView = new TextView();
+        textBox = new Box(Orientation.HORIZONTAL, 0);
         update_color_theme();
         
-        textView.buffer.text = make_display_string(hours, minutes, seconds);
+        textView.get_style_context().add_class("ptimer-stage-time");
+        update_display();
+        textView.show();
         // @TODO this has a bug where new stages that are made will have messed up css 
         // until the length of the display string changes. no clue. doesn't happen on 
         // stages made in PTimer constructior
-        //textView.get_style_context().add_class("ptimer-stage-time");
         textView.set_justification(Justification.CENTER);
         textView.cursor_visible = false;
         textView.set_editable(false);
         
-        textView.set_halign(Align.CENTER);
-        textView.set_valign(Align.CENTER);
-
         labelBox = new Box(Orientation.HORIZONTAL, 0);
         labelBox.set_spacing(10);
         label.get_style_context().add_class("ptimer-stage-label");
@@ -80,7 +81,7 @@ public class Stage {
             time = smh_to_unix();
             timeLeft = time;
 
-            textView.buffer.text = make_display_string(hours, minutes, seconds);
+            update_display();
             // It is unfortunate that this neds to be called twice with its different
             // settings, but it is necessary to get the different formatting correct at all
             // times, even after the original label has been made since it might get changed here.
@@ -160,7 +161,9 @@ public class Stage {
     }
 
     public void update_display() {
-        textView.buffer.text = make_display_string(hoursLeft, minutesLeft, secondsLeft);
+        var buf = new TextBuffer(null);
+        buf.set_text(make_display_string(hoursLeft, minutesLeft, secondsLeft));
+        textView.set_buffer(buf);
     }
 
     public int64 smh_to_unix() {
@@ -193,6 +196,9 @@ public class Stage {
         if (active) return;
         active = true;
 
+        //textView.get_style_context().remove_class("ptimer-stage-time-low-opacity");
+        //textView.get_style_context().add_class("ptimer-stage-time");
+
         if (lastUpdated == 0) {
             timeLeft = smh_to_unix();
         }
@@ -204,6 +210,9 @@ public class Stage {
     public void set_inactive() {
         if (!active) return;
         active = false;
+
+        //textView.get_style_context().remove_class("ptimer-stage-time");
+        //textView.get_style_context().add_class("ptimer-stage-time-low-opacity");
 
         int64 currentTime = GLib.get_monotonic_time();
         timeLeft -= currentTime - lastUpdated;
@@ -230,7 +239,7 @@ public class Stage {
 
     public void update_color_theme() {
         if (cssColorTheme != null) {
-            textView.get_style_context().remove_class(cssColorTheme);
+            textView.get_style_context().add_class(cssColorTheme);
         }
         ColorTheme theme = colors.get_current_theme();
         cssColorTheme = "ptimer-" + theme.name + colorOrder.to_string();

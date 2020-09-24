@@ -16,7 +16,7 @@ applet_deps = [
     dep_json
 ]
 
-applet_sources =[
+applet_sources = [
     'PerioTimerApplet.vala',
     'Widgets/PTimer.vala',
     'Widgets/Stage.vala',
@@ -24,6 +24,7 @@ applet_sources =[
     'Widgets/TimerAnimation.vala',
     'Widgets/InputManager.vala',
     'Widgets/Colors.vala',
+    'Widgets/SoundManager.vala',
     'Widgets/SettingsMenu.vala',
     gresources
 ]

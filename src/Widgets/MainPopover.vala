@@ -5,6 +5,7 @@ namespace PerioTimer.Widgets {
 public class MainPopover : Budgie.Popover {
     private Stack? pageStack = null;
     private ColorManager? colors = null;
+    private SoundManager? sounds = null;
     //private SettingsManager? settings = null;
 
     private Stack? timerStack = null;
@@ -51,11 +52,16 @@ public class MainPopover : Budgie.Popover {
 
         var menu = new Gtk.Menu();
         var colorLink = new Gtk.MenuItem.with_label("Colors");
+        var soundLink = new Gtk.MenuItem.with_label("Sounds");
         var helpLink = new Gtk.MenuItem.with_label("Help");
         colorLink.activate.connect(() => {
             pageStack.set_visible_child_name("colors");
         });
+        soundLink.activate.connect(() => {
+            pageStack.set_visible_child_name("sounds");
+        });
         menu.add(colorLink);
+        menu.add(soundLink);
         menu.add(helpLink);
         menu.show_all();
         headerSettings.set_popup(menu);
@@ -89,14 +95,17 @@ public class MainPopover : Budgie.Popover {
         });
 
         colors = new ColorManager(pageStack, timers);
-        timers[0] = new PTimer(this, colors, width, height);
+        sounds = new SoundManager(pageStack);
+        timers[0] = new PTimer(this, colors, sounds, width, height);
         timerStack.add_titled(timers[0].get_view(), currentTimer.to_string(), "Timer 0");
         
         mainView.pack_start(header, false, false, 0);
         mainView.pack_start(timerStack, false, false, 0);
 
+
         pageStack.add_named(mainView, "main");
         pageStack.add_named(colors.get_view(), "colors");
+        pageStack.add_named(sounds.get_view(), "sounds");
         pageStack.set_visible_child_name("main");
         pageStack.show_all();
 
@@ -114,7 +123,7 @@ public class MainPopover : Budgie.Popover {
         numTimers++;
 
         // @TODO make this less bad once new stack implemention is done
-        timers[currentTimer] = new PTimer(this, colors, width, height);
+        timers[currentTimer] = new PTimer(this, colors, sounds, width, height);
         timerStack.add_titled(timers[currentTimer].get_view(), currentTimer.to_string(), "Timer " + currentTimer.to_string());
         
         mainView.show_all();
@@ -132,7 +141,7 @@ public class MainPopover : Budgie.Popover {
         currentTimer = ct;
 
         if (numTimers == 1) {
-            timers[currentTimer] = new PTimer(this, colors, width, height);
+            timers[currentTimer] = new PTimer(this, colors, sounds, width, height);
             timerStack.add_titled(timers[currentTimer].get_view(), currentTimer.to_string(), "Timer " + currentTimer.to_string());
         } else {
             for (int i = currentTimer; i < numTimers - 1; i++) {

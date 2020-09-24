@@ -1,7 +1,7 @@
 stackswitcher.ptimer button label {
     font-family: lato;
 }
-textview {
+textview.ptimer-stage-time {
     font-family: lato;
     font-weight: 300;
     letter-spacing: 3px;

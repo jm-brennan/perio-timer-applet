@@ -46,9 +46,11 @@ public class PTimer {
     private int currentStage = 0;
     private int numStages = 1;
     private GLib.Queue<int> stageColors = new GLib.Queue<int>();
-    private ColorManager colors = null;
+    
+    private ColorManager? colors = null;
+    private SoundManager? sounds = null;
 
-    public PTimer(MainPopover parent, ColorManager colors, int width, int height) {
+    public PTimer(MainPopover parent, ColorManager colors, SoundManager sounds, int width, int height) {
         repeatImOn.set_pixel_size(16);
         repeatImOff.set_pixel_size(16);
         notificationImOn.set_pixel_size(16);
@@ -57,6 +59,7 @@ public class PTimer {
         volumeImOff.set_pixel_size(16);
     
         this.colors = colors;
+        this.sounds = sounds;
         im = new InputManager(this, parent);
 
         stageColors.push_head(3);
@@ -71,7 +74,6 @@ public class PTimer {
         overlay.set_size_request(width, height);
         overlay.set_halign(Align.CENTER);
         overlay.button_press_event.connect((e) => {
-            
             this.toggle_active();
             return true;
         });
@@ -95,10 +97,11 @@ public class PTimer {
         stageStack.add(stages[0].get_view());
         stageStack.set_visible_child(stages[0].get_view());
         stageStack.set_halign(Align.CENTER);
-        overlay.add(stageStack);
-
+        stageStack.set_valign(Align.CENTER);
+        
         ta = new TimerAnimation(width, height, stages);
         overlay.add_overlay(ta);
+        overlay.add(stageStack);
         timerView.pack_start(overlay, false, false, 0);
         
         Box stageControlView = new Box(Orientation.HORIZONTAL, 0);
@@ -242,7 +245,6 @@ public class PTimer {
         
         im.set_inputString("");
         ta.update_stages(numStages);
-        timerView.show_all();
         stageStack.set_visible_child(stages[currentStage].get_view());
     }
 
@@ -439,8 +441,6 @@ public class PTimer {
     }
 
     private void notify(string summary, string body) {
-        if (!notificationBut.get_active()) return;
-
         var cmd = "notify-send -a 'Perio Timer Applet' -i appointment-soon-symbolic '%s' '%s'".printf(summary, body);
         try {
             Process.spawn_command_line_async(cmd);
@@ -450,18 +450,6 @@ public class PTimer {
         }
     }
 
-    private void sound() {
-        if (!volumeBut.get_active()) return;
-
-        var cmd = "paplay /usr/share/sounds/freedesktop/stereo/complete.oga";
-        try {
-            Process.spawn_command_line_async(cmd);
-        } catch (GLib.SpawnError e) {
-            stderr.printf("Error playing sound: %s\n", e.message);
-            return;
-        }
-    }
-    
     private bool update_time() {
         if (!stages[currentStage].active) return false;
 
@@ -482,7 +470,6 @@ public class PTimer {
                 // executes and it'll work properly
                 currentStage++;
                 notifyBody = "Up next: %s.".printf(stages[currentStage].get_label_string());
-                //stageStack.set_visible_child(stages[currentStage].get_view());
                 Timeout.add(timeToSwitchStage, () => {
                     set_active();
                     return false;
@@ -500,8 +487,8 @@ public class PTimer {
                     return false;
                 });
             }
-            notify(notifySummary, notifyBody);
-            sound();
+            if (notificationBut.get_active()) notify(notifySummary, notifyBody);
+            if (volumeBut.get_active()) sounds.play_sound();
         }
         return false;
     }

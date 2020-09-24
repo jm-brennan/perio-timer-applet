@@ -42,15 +42,16 @@ public class ColorManager {
         header.pack_start(back);
         view.pack_start(header, false, false, 0);
 
-        var radioButtonStart = new RadioButton(null); // wont ever use this one but it will define the group
-
+        var radioButtonGroup = new RadioButton(null); // wont ever use this one but it will define the group
+        
         for (int i = 0; i < numThemes; i++) {
+            var themeEventBox = new EventBox();
             var themeBox = new Box(Orientation.VERTICAL, 0);
             var nameBox = new Box(Orientation.HORIZONTAL, 0);
             var themeName = new Label(themes[i].name);
             themeName.set_halign(Align.START);
             themeName.get_style_context().add_class("ptimer-color-label");
-            var radio = new RadioButton.from_widget(radioButtonStart);
+            var radio = new RadioButton.from_widget(radioButtonGroup);
             radio.set_data("themeIndex", i);
             if (i == currentTheme) radio.set_active(true);
             radio.toggled.connect(() => {
@@ -61,6 +62,10 @@ public class ColorManager {
                         if (timers[t] != null) timers[t].update_theme();
                     }
                 }
+            });
+            themeEventBox.button_press_event.connect(() => {
+                radio.set_active(true);
+                return false;
             });
             var swatches = new Box(Orientation.HORIZONTAL, 0);
             swatches.set_hexpand(false);
@@ -74,7 +79,11 @@ public class ColorManager {
             }
             nameBox.pack_start(themeName, false, false, 3);
             nameBox.pack_end(radio, false, false, 3);
-            themeBox.pack_start(nameBox, false, false, 2);
+            // Really should be wrapped around the whole themeBox, but the swatches, because they
+            // are buttons, punch holes in the eventBox. Its dumb because set_sensitive(false) makes
+            // the buttons unable to connect to the clicked event, but it still captures the click
+            themeEventBox.add(nameBox);
+            themeBox.pack_start(themeEventBox, false, false, 2);
             themeBox.pack_start(swatches, false, false, 2);
             view.pack_start(themeBox, false, false, 10);
         }
