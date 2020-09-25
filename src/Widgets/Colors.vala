@@ -50,7 +50,7 @@ public class ColorManager {
             var nameBox = new Box(Orientation.HORIZONTAL, 0);
             var themeName = new Label(themes[i].name);
             themeName.set_halign(Align.START);
-            themeName.get_style_context().add_class("ptimer-color-label");
+            themeName.get_style_context().add_class("ptimer-text");
             var radio = new RadioButton.from_widget(radioButtonGroup);
             radio.set_data("themeIndex", i);
             if (i == currentTheme) radio.set_active(true);

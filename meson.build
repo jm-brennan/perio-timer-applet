@@ -28,4 +28,4 @@ gresources = gnome.compile_resources(
 )
 
 subdir('src')
-subdir('style')
+subdir('data')

@@ -17,7 +17,13 @@ label.ptimer-stage-label {
     font-size: 15px;
     opacity: 0.75;
 }
-label.ptimer-color-label {
+label.ptimer-text {
     font-family: lato;
-    font-size: 13px;
+    font-size: 15px;
+}
+label.ptimer-folder-message {
+    font-family: lato;
+    font-size: 15px;
+    font-style: italic;
+    opacity: 0.80;
 }
