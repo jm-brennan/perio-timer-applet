@@ -6,6 +6,7 @@ public class MainPopover : Budgie.Popover {
     private Stack? pageStack = null;
     private ColorManager? colors = null;
     private SoundManager? sounds = null;
+    private const string HELP_LINK = "https://github.com/jm-brennan/perio-timer-applet/blob/master/GUIDE.md";
     //private SettingsManager? settings = null;
 
     private Stack? timerStack = null;
@@ -60,6 +61,13 @@ public class MainPopover : Budgie.Popover {
         soundLink.activate.connect(() => {
             pageStack.set_visible_child_name("sounds");
         });
+        helpLink.activate.connect(() => {
+            try {
+                show_uri_on_window(null, HELP_LINK, Gdk.CURRENT_TIME);
+            } catch (Error e) {
+                warning("Failed to open link to help page: %s\n", e.message);
+            }
+        });
         menu.add(colorLink);
         menu.add(soundLink);
         menu.add(helpLink);
@@ -101,7 +109,6 @@ public class MainPopover : Budgie.Popover {
         
         mainView.pack_start(header, false, false, 0);
         mainView.pack_start(timerStack, false, false, 0);
-
 
         pageStack.add_named(mainView, "main");
         pageStack.add_named(colors.get_view(), "colors");

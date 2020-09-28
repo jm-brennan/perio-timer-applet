@@ -42,13 +42,14 @@ public class Stage {
         
         textView.get_style_context().add_class("ptimer-stage-time");
         update_display();
-        textView.show();
-        // @TODO this has a bug where new stages that are made will have messed up css 
-        // until the length of the display string changes. no clue. doesn't happen on 
-        // stages made in PTimer constructior
         textView.set_justification(Justification.CENTER);
         textView.cursor_visible = false;
         textView.set_editable(false);
+        textView.show();
+
+        // @TODO this causes a bug where the textview is not given the proper space to display.
+        // I think it is a GTK bug, not me, will report soon
+        //textView.set_halign(Align.CENTER);
         
         labelBox = new Box(Orientation.HORIZONTAL, 0);
         labelBox.set_spacing(10);

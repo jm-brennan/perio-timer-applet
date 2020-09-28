@@ -13,8 +13,7 @@ enum KeyCode {
     SPACE  = 32,
     m = 109,
     n = 110,
-    r = 114,
-    v = 118
+    r = 114
 }
 
 
@@ -109,9 +108,6 @@ public class InputManager {
                     break;
                 case KeyCode.r:
                     timer.toggle_repeat();
-                    break;
-                case KeyCode.v:
-                    timer.toggle_volume();
                     break;
             }
         }

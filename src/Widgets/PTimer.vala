@@ -488,7 +488,7 @@ public class PTimer {
                 });
             }
             if (notificationBut.get_active()) notify(notifySummary, notifyBody);
-            if (volumeBut.get_active()) sounds.play_sound();
+            if (volumeBut.get_active()) sounds.play_sound(true, null);
         }
         return false;
     }

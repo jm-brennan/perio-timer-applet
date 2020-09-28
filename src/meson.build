@@ -25,7 +25,6 @@ applet_sources = [
     'Widgets/InputManager.vala',
     'Widgets/Colors.vala',
     'Widgets/SoundManager.vala',
-    'Widgets/SettingsMenu.vala',
     gresources
 ]
 

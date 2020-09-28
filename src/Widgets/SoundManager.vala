@@ -27,17 +27,19 @@ public class SoundManager {
         });
         header.pack_start(back);
         
-       
-
+        // making soundList stuff now so that it will be scoped for making refresh button
         var scroll = new ScrolledWindow(null, null);
         var viewport = new Viewport(null, null);
-        soundList = new Box(Orientation.VERTICAL, 0);
+        soundList = new Box(Orientation.VERTICAL, 5);
+        // @TODO load from defaults
+        soundPath = "/usr/share/sounds/perio-timer/Toaster Oven.oga";
         build_sound_list();
 
         var refresh = new Button.from_icon_name("view-refresh-symbolic", IconSize.MENU);
+        refresh.set_tooltip_text("Refresh Files");
         refresh.clicked.connect(() => {
             viewport.remove(soundList);
-            soundList = new Box(Orientation.VERTICAL, 0);
+            soundList = new Box(Orientation.VERTICAL, 5);
             build_sound_list();
             viewport.add(soundList);
             view.show_all();
@@ -58,16 +60,16 @@ public class SoundManager {
         folderMessage.get_style_context().add_class("ptimer-folder-message");
         soundList.pack_end(folderMessage, false, false);
         
-        if (FileUtils.test(SOUND_DIR, FileTest.IS_DIR)) {
+        Dir dir;
+        try {
+            dir = Dir.open(SOUND_DIR, 0);
             folderMessage.set_label("Loading from:\n%s".printf(SOUND_DIR));
-        } else {
+        } catch (FileError e) {
             folderMessage.set_label("Could not load sound folder:\n%s".printf(SOUND_DIR));
             return;
         }
 
-        Dir dir = Dir.open(SOUND_DIR, 0);
-
-        var radioButtonGroup = new RadioButton(null);
+        var radioButtonGroup = new RadioButton(null); // wont ever use this one but it will define the group
         string? filename = dir.read_name();
         while (filename != null) {
             var filepath = Path.build_filename(SOUND_DIR, filename);
@@ -79,25 +81,34 @@ public class SoundManager {
             playBut.set_image(playIcon);
             playBut.set_data("filePath", filepath);
             playBut.clicked.connect(() => {
-                play_sound(playBut.get_data("filePath"));
+                play_sound(false, playBut.get_data("filePath"));
             });
 
             var soundName = new Label(filename.split(".")[0]);
             soundName.get_style_context().add_class("ptimer-text");
             soundName.set_line_wrap(true);
             var radio = new RadioButton.from_widget(radioButtonGroup);
+            radio.set_data("file", filepath);
+            if (filepath == soundPath) radio.set_active(true);
+            radio.toggled.connect(() => {
+                if (radio.get_active()) {
+                    soundPath = radio.get_data("file");
+                }
+            });
 
-            soundBox.pack_start(playBut, false, false, 0);
-            soundBox.pack_start(soundName, false, false, 0);
-            soundBox.pack_end(radio, false, false, 0);
+            soundBox.pack_start(playBut, false, false, 3);
+            soundBox.pack_start(soundName, false, false, 3);
+            soundBox.pack_end(radio, false, false, 3);
             soundList.pack_start(soundBox);
 
             filename = dir.read_name();
         }
     }
 
-    public void play_sound(string filePath = "test") {
-        var cmd = "paplay '" + filePath + "'";
+    public void play_sound(bool useStored, string? file) {
+        var fileToPlay = this.soundPath;
+        if (!useStored) fileToPlay = file;
+        var cmd = "paplay '" + fileToPlay + "'";
 
         try {
             Process.spawn_command_line_async(cmd);
@@ -111,4 +122,5 @@ public class SoundManager {
         return view;
     }
 }
-}
+
+} // end namespace

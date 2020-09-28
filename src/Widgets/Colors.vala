@@ -42,6 +42,10 @@ public class ColorManager {
         header.pack_start(back);
         view.pack_start(header, false, false, 0);
 
+        var scroll = new ScrolledWindow(null, null);
+        var viewport = new Viewport(null, null);
+        var colorList = new Box(Orientation.VERTICAL, 0);
+
         var radioButtonGroup = new RadioButton(null); // wont ever use this one but it will define the group
         
         for (int i = 0; i < numThemes; i++) {
@@ -85,8 +89,12 @@ public class ColorManager {
             themeEventBox.add(nameBox);
             themeBox.pack_start(themeEventBox, false, false, 2);
             themeBox.pack_start(swatches, false, false, 2);
-            view.pack_start(themeBox, false, false, 10);
+            colorList.pack_start(themeBox, false, false, 10);
         }
+
+        viewport.add(colorList);
+        scroll.add(viewport);
+        view.pack_start(scroll);
         
         update_css();
     }
@@ -177,5 +185,4 @@ public class ColorManager {
 
 }
 
-
-}
+} // end namespace
