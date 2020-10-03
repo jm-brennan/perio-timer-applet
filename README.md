@@ -1,5 +1,5 @@
 # perio-timer-applet
-Applet is still under heavy development. Basic functionality (operated through keyboard) shown here:
+Applet is still under heavy development. Basic functionality (showing operation both through UI elements and keyboard) demonstrated here:
 <p align="center">
   <img src="data/style/demo.GIF" alt="Timer Demonstration"/>
 </p>
