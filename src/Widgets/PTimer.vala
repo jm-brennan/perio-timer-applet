@@ -6,7 +6,7 @@ public class PTimer {
     private Overlay? overlay = null;
     private TimerAnimation? ta = null;
     public InputManager? im = null;
-    private Box? timerView = null;
+    private Box? view = null;
     private Stack stageStack = null;
     private Box? stageLabels = null;
     private bool started = false;
@@ -67,7 +67,7 @@ public class PTimer {
         stageColors.push_head(1);
         stageColors.push_head(0);
         
-        timerView = new Box(Orientation.VERTICAL, 0);
+        view = new Box(Orientation.VERTICAL, 0);
         
         overlay = new Overlay();
         overlay.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK);
@@ -98,11 +98,11 @@ public class PTimer {
         stageStack.set_visible_child(stages[0].get_view());
         stageStack.set_halign(Align.CENTER);
         stageStack.set_valign(Align.CENTER);
-        
+
         ta = new TimerAnimation(width, height, stages);
-        overlay.add_overlay(ta);
         overlay.add(stageStack);
-        timerView.pack_start(overlay, false, false, 0);
+        overlay.add_overlay(ta);
+        view.pack_start(overlay, false, false, 0);
         
         Box stageControlView = new Box(Orientation.HORIZONTAL, 0);
         stageControlView.set_halign(Align.CENTER);
@@ -142,13 +142,13 @@ public class PTimer {
             }
         });
         stageControlView.pack_start(stageRight, false, false, 0);
-        timerView.pack_start(stageControlView, true, true, 0);
+        view.pack_start(stageControlView, true, true, 0);
 
         stageLabels = new Box(Orientation.HORIZONTAL, 0);
-        stageLabels.height_request = 20;
+        stageLabels.height_request = 22;
         stageLabels.set_halign(Align.CENTER);
         stageLabels.set_spacing(10);
-        timerView.pack_start(stageLabels, true, true, 5);
+        view.pack_start(stageLabels, true, true, 5);
 
         Box settingsView = new Box(Orientation.HORIZONTAL, 0);
         
@@ -192,7 +192,16 @@ public class PTimer {
         });
         settingsView.pack_start(notificationBut, true, false, 0);
 
-        timerView.pack_start(settingsView, true, true, 10);
+        view.pack_start(settingsView, true, true, 10);
+
+        // disable animation while this timer is not being shown
+        // either when the applet is minimized or another one is currently visible
+        view.map.connect(() => {
+            ta.set_need_to_draw(true);
+        });
+        view.unmap.connect(() => {
+            ta.set_need_to_draw(false);
+        });
     }
 
     public void set_input_time(string inputString) {
@@ -238,6 +247,7 @@ public class PTimer {
         
         stages[currentStage] = new Stage(colors, stageColors.pop_head(), doSeconds);
         stageStack.add(stages[currentStage].get_view());
+        
 
         while (stagesToReorder.get_length() != 0) {
             stageStack.add(stages[stagesToReorder.pop_head()].get_view());
@@ -408,7 +418,7 @@ public class PTimer {
         
         // set the inputString of the inputManager as though we had
         // typed out the timeLeft being display so it can be edited
-        string s = stages[currentStage].string_from_timeLeft();
+        string s = stages[currentStage].input_string_from_timeLeft();
         stages[currentStage].inputString = s;
         im.set_inputString(s);
         
@@ -499,7 +509,7 @@ public class PTimer {
 
     public void toggle_volume() { volumeBut.set_active(!volumeBut.get_active()); }
 
-    public Box get_view() { return this.timerView; }
+    public Box get_view() { return this.view; }
 }
 
 } // end namespace

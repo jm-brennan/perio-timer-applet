@@ -6,6 +6,7 @@ public class TimerAnimation : Gtk.Widget {
     private int width;
     private int height;
     private bool active = false;
+    private bool needToDraw = true;
     private int update_interval = 60;
 
     private unowned Stage[] stages = null;
@@ -36,6 +37,7 @@ public class TimerAnimation : Gtk.Widget {
     }
 
     private bool update() {
+        if (!needToDraw) return false;
         if (active) redraw_canvas();
         return active;
     }
@@ -58,7 +60,7 @@ public class TimerAnimation : Gtk.Widget {
         cr.set_line_width(12.0);
 
         if (totalTime == 0 && !active) {
-            // when nothing has been entered, draw full circle
+            // when nothing has been entered, still draw full circle
             cr.set_source_rgb(stages[0].color.r / (double)255, 
                               stages[0].color.g / (double)255, 
                               stages[0].color.b / (double)255);
@@ -104,6 +106,7 @@ public class TimerAnimation : Gtk.Widget {
             degreesPastLastUpdate[i] = 0;
         }   
         active = false;
+        needToDraw = false;
         redraw_canvas();
     }
 
@@ -111,8 +114,17 @@ public class TimerAnimation : Gtk.Widget {
         if (active) return;
 
         active = true;
+        needToDraw = true;
         redraw_canvas();
         Timeout.add(update_interval, update); 
+    }
+
+    public void set_need_to_draw(bool toDrawOrNotToDraw) {
+        needToDraw = toDrawOrNotToDraw;
+        if (needToDraw) {
+            redraw_canvas();
+            Timeout.add(update_interval, update);
+        }
     }
 }
 

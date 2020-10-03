@@ -15,9 +15,7 @@ public class Stage {
     private Label? label = new Label("0s");
     private Label? labelDot = null;
     
-    private Box? textBox = null;
     private TextView? textView = null;
-    //private TextView[] textViews = new TextView[6];
     private string[] smh = new string[3];
     public int hours = 0;
     public int minutes = 0;
@@ -36,43 +34,38 @@ public class Stage {
         this.colorOrder = colorOrder;
         this.doSeconds = doSeconds;
         
-        textView = new TextView();
-        textBox = new Box(Orientation.HORIZONTAL, 0);
+        textView = new TextView();  
         update_color_theme();
-        
-        textView.get_style_context().add_class("ptimer-stage-time");
         update_display();
         textView.set_justification(Justification.CENTER);
-        textView.cursor_visible = false;
+        textView.set_cursor_visible(false);
         textView.set_editable(false);
+        textView.set_halign(Align.CENTER);
         textView.show();
 
-        // @TODO this causes a bug where the textview is not given the proper space to display.
-        // I think it is a GTK bug, not me, will report soon
-        //textView.set_halign(Align.CENTER);
-        
         labelBox = new Box(Orientation.HORIZONTAL, 0);
         labelBox.set_spacing(10);
         label.get_style_context().add_class("ptimer-stage-label");
+        label.get_style_context().add_class("ptimer-stage-label-low-alpha");
         labelBox.pack_end(label, false, false, 0); // pack end so that dot can be added to start
     }
 
     public void set_smh(string inputString) {
-        this.inputString = inputString;
-        smh[0] = ""; // seconds
-        smh[1] = ""; // minutes
-        smh[2] = ""; // hours
-        int smhIndex = 0;
-        
-        for (int i = 0; i < inputString.length; i++) {
-            smhIndex = (int)Math.floorf((inputString.length - 1 - i) / 2.0f);
-            if (!doSeconds) {
-                smhIndex += 1;
-            }
-            smh[smhIndex] = smh[smhIndex] + inputString.substring(i, 1);
-        }
-        
         if (!active) { 
+            this.inputString = inputString;
+            smh[0] = ""; // seconds
+            smh[1] = ""; // minutes
+            smh[2] = ""; // hours
+            int smhIndex = 0;
+            
+            for (int i = 0; i < inputString.length; i++) {
+                smhIndex = (int)Math.floorf((inputString.length - 1 - i) / 2.0f);
+                if (!doSeconds) {
+                    smhIndex += 1;
+                }
+                smh[smhIndex] = smh[smhIndex] + inputString.substring(i, 1);
+            }
+        
             hours = int.parse(smh[2]);
             hoursLeft = hours;
             minutes = int.parse(smh[1]);
@@ -83,26 +76,28 @@ public class Stage {
             timeLeft = time;
 
             update_display();
-            // It is unfortunate that this neds to be called twice with its different
-            // settings, but it is necessary to get the different formatting correct at all
-            // times, even after the original label has been made since it might get changed here.
             label.set_label(make_display_string(hours, minutes, seconds, true));
-
         }
     }
 
-    public string string_from_timeLeft() {
+    public string input_string_from_timeLeft() {
         string inputStringForCurrentTime = "";
         if (hoursLeft > 0) inputStringForCurrentTime += hoursLeft.to_string();
 
-        if (minutesLeft > 0) {
-            if (minutesLeft < 10 && hoursLeft > 0) inputStringForCurrentTime += " ";
+        if (minutesLeft > 0 || hoursLeft > 0) {
+            if (minutesLeft < 10 && hoursLeft > 0) {
+                inputStringForCurrentTime += "0";
+            }
             inputStringForCurrentTime += minutesLeft.to_string();
         }
-
-        if (secondsLeft > 0) {
-            if (secondsLeft < 10 && minutesLeft > 0) inputStringForCurrentTime += " ";
-            inputStringForCurrentTime += secondsLeft.to_string();
+    
+        if (doSeconds || lastUpdated != 0) {
+            if (secondsLeft > 0 || minutesLeft > 0 || hoursLeft > 0) {
+                if (secondsLeft < 10 && (minutesLeft > 0 || hoursLeft > 0)) {
+                    inputStringForCurrentTime += "0";
+                }
+                inputStringForCurrentTime += secondsLeft.to_string();
+            }
         }
 
         return inputStringForCurrentTime;
@@ -163,7 +158,60 @@ public class Stage {
 
     public void update_display() {
         var buf = new TextBuffer(null);
-        buf.set_text(make_display_string(hoursLeft, minutesLeft, secondsLeft));
+        var displayString = make_display_string(hoursLeft, minutesLeft, secondsLeft);
+        buf.set_text(displayString);
+               
+        var fontSize = 32;
+        if (displayString.length == 10) fontSize = 28;
+        if (displayString.length > 10) fontSize = 25;
+        
+        TextIter fontStartIter;
+        TextIter fontEndIter;
+        buf.get_start_iter(out fontStartIter);
+        buf.get_end_iter(out fontEndIter);
+
+        var fontTag = buf.create_tag("ptimer-stage-display-font", 
+                                 "font", "lato %d".printf(fontSize), 
+                                 "weight", 300, null);
+        buf.apply_tag(fontTag, fontStartIter, fontEndIter);
+        
+        if (!active) {
+            Gdk.RGBA color = textView.get_style_context().get_color(StateFlags.NORMAL);
+            
+            double r = color.red * (double)255.0;
+            double g = color.green * (double)255.0;
+            double b = color.blue * (double)255.0;
+            
+            var lowAlphaColor = "rgba(" + 
+                                ((int)r).to_string() + "," +
+                                ((int)g).to_string() + "," +
+                                ((int)b).to_string() + "," +
+                                "0.6)";
+            
+            // this is ugly but it is entirely constrained, and there isnt an easy
+            // mathematical relationship here i think, somtimes simplicity is best
+            var lowAlphaIndex = 0;
+            var inputStringForCurrentTime = input_string_from_timeLeft();
+            if (inputStringForCurrentTime.length == 1) lowAlphaIndex = 2;
+            if (inputStringForCurrentTime.length == 2) lowAlphaIndex = 3;
+            if (inputStringForCurrentTime.length == 3) lowAlphaIndex = 6;
+            if (inputStringForCurrentTime.length == 4) lowAlphaIndex = 7;
+            if (inputStringForCurrentTime.length == 5) lowAlphaIndex = 10;
+            if (inputStringForCurrentTime.length >= 6) lowAlphaIndex = buf.get_char_count();
+
+            TextIter lowAlphaStart;
+            TextIter lowAlphaEnd;
+            buf.get_start_iter(out lowAlphaStart);
+            buf.get_end_iter(out lowAlphaEnd);
+            lowAlphaEnd.backward_chars(lowAlphaIndex);
+
+            var lowAlphaTag = buf.create_tag("ptimer-stage-display-low-alpha",
+                                             "foreground", lowAlphaColor, null);
+
+            buf.apply_tag(lowAlphaTag, lowAlphaStart, lowAlphaEnd);
+
+        }
+
         textView.set_buffer(buf);
     }
 
@@ -197,8 +245,7 @@ public class Stage {
         if (active) return;
         active = true;
 
-        //textView.get_style_context().remove_class("ptimer-stage-time-low-opacity");
-        //textView.get_style_context().add_class("ptimer-stage-time");
+        label.get_style_context().remove_class("ptimer-stage-label-low-alpha");
 
         if (lastUpdated == 0) {
             timeLeft = smh_to_unix();
@@ -212,8 +259,7 @@ public class Stage {
         if (!active) return;
         active = false;
 
-        //textView.get_style_context().remove_class("ptimer-stage-time");
-        //textView.get_style_context().add_class("ptimer-stage-time-low-opacity");
+        label.get_style_context().add_class("ptimer-stage-label-low-alpha");
 
         int64 currentTime = GLib.get_monotonic_time();
         timeLeft -= currentTime - lastUpdated;
