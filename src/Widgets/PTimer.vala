@@ -51,24 +51,22 @@ public class PTimer {
     private SoundManager? sounds = null;
 
     public PTimer(MainPopover parent, ColorManager colors, SoundManager sounds, int width, int height) {
-        repeatImOn.set_pixel_size(16);
-        repeatImOff.set_pixel_size(16);
-        notificationImOn.set_pixel_size(16);
-        notificationImOff.set_pixel_size(16);
-        volumeImOn.set_pixel_size(16);
-        volumeImOff.set_pixel_size(16);
-    
         this.colors = colors;
         this.sounds = sounds;
         im = new InputManager(this, parent);
 
+        // order in which to assign the colors in the color theme
+        // @TODO make this order determined by a stack as well for each timer
         stageColors.push_head(3);
         stageColors.push_head(2);
         stageColors.push_head(1);
         stageColors.push_head(0);
         
+        // main view of a timer
         view = new Box(Orientation.VERTICAL, 0);
         
+
+        // overlay the timer animation over the display of the stage
         overlay = new Overlay();
         overlay.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.LEAVE_NOTIFY_MASK);
         overlay.set_size_request(width, height);
@@ -77,19 +75,6 @@ public class PTimer {
             this.toggle_active();
             return true;
         });
-        // @TODO implement dragging leading edge of animation with this
-        /*  overlay.button_release_event.connect((e) => {
-            print("RELEASE\n");
-            print(e.x.to_string());
-            print("\n");
-            print(e.y.to_string());
-            return true;
-        });
-        overlay.leave_notify_event.connect(() => {
-            print("LEFT");
-            return true;
-        });  */
-        
         
         stages[0] = new Stage(colors, stageColors.pop_head(), doSeconds);
         stageStack = new Stack();
@@ -104,6 +89,12 @@ public class PTimer {
         overlay.add_overlay(ta);
         view.pack_start(overlay, false, false, 0);
         
+
+        // Create the 3 buttons right below the timer display to:
+        // delete stage / play / add stage
+        // while not active, or to:
+        // skip stage backward / pause / skip stage forward
+        // while inactive
         Box stageControlView = new Box(Orientation.HORIZONTAL, 0);
         stageControlView.set_halign(Align.CENTER);
         stageControlView.set_spacing(20);
@@ -144,14 +135,20 @@ public class PTimer {
         stageControlView.pack_start(stageRight, false, false, 0);
         view.pack_start(stageControlView, true, true, 0);
 
+
+        // Area for stage labels to appear in once they are either navigated away from
+        // or the timer is started
         stageLabels = new Box(Orientation.HORIZONTAL, 0);
         stageLabels.height_request = 22;
         stageLabels.set_halign(Align.CENTER);
         stageLabels.set_spacing(10);
         view.pack_start(stageLabels, true, true, 5);
 
+
+        // Settings/buttons for timer end behavior, when timer ends should it:
+        // play sound / repeat / send notification
         Box settingsView = new Box(Orientation.HORIZONTAL, 0);
-        
+
         volumeBut = new ToggleButton();
         volumeBut.set_tooltip_text("Toggle Sound");
         // @TODO load from default
@@ -194,6 +191,7 @@ public class PTimer {
 
         view.pack_start(settingsView, true, true, 10);
 
+
         // disable animation while this timer is not being shown
         // either when the applet is minimized or another one is currently visible
         view.map.connect(() => {
@@ -212,9 +210,10 @@ public class PTimer {
     public void start() {
         if (started || stages[currentStage].active) return;
 
-        if (!restarted) add_label();
+        if (!current_stage_has_label()) add_label();
 
         currentStage = 0;
+        for (int i = 0; i < numStages; i++) stages[i].reset();
         stageStack.set_visible_child(stages[currentStage].get_view());
         started = true;
 
@@ -229,7 +228,8 @@ public class PTimer {
     public void add_stage() {
         if (numStages == MAX_STAGES) return;
         
-        add_label();
+        // add label to current stage as it navigates away, before adding a new stage
+        add_label(); 
         started = false;
         
         // because the stageStack is an actual stack, can't just insert a new stage
@@ -248,9 +248,10 @@ public class PTimer {
         stages[currentStage] = new Stage(colors, stageColors.pop_head(), doSeconds);
         stageStack.add(stages[currentStage].get_view());
         
-
         while (stagesToReorder.get_length() != 0) {
-            stageStack.add(stages[stagesToReorder.pop_head()].get_view());
+            var stageToReAdd = stagesToReorder.pop_head();
+            stages[stageToReAdd].reset();
+            stageStack.add(stages[stageToReAdd].get_view());
         }
         
         im.set_inputString("");
@@ -288,7 +289,7 @@ public class PTimer {
         if (newStage < 0 || newStage >= numStages) {
             newStage = prevStage;
         } else if (addLabel) {
-            // it is a little wasteful to try to add it every time there is a switching of stages
+            // it is a little silly to try to add it every time there is a switching of stages
             // but doing it with minimum checking would add too much complexity
             add_label();
         }
@@ -331,16 +332,13 @@ public class PTimer {
     }
 
     private void add_label() {
-        var labels = stageLabels.get_children();
-        for (int i = 0; i < labels.length(); i++) {
-            var labelEventBox = (EventBox)labels.nth_data(i);
-            if (stages[currentStage].get_label() == labelEventBox.get_child()) return;
-        }
+        if (current_stage_has_label()) return;
 
         // if its a dot-able stage and that stage does not already have a dot
         if (currentStage != 0 && stages[currentStage].get_label().get_children().length() < 2) {
             stages[currentStage].add_label_dot();
         }
+
         var eventBox = new EventBox();
         eventBox.set_data("listOrder", currentStage);
         eventBox.button_press_event.connect(() => {
@@ -360,12 +358,22 @@ public class PTimer {
             var labelEventBox = (EventBox)labels.nth_data(i);
             if (stages[currentStage].get_label() == labelEventBox.get_child()) {
                 stageLabels.remove(labelEventBox);
-                if (currentStage == 0 && numStages > 1 && stages[currentStage+1].get_label().get_children().length() == 2) {
+                if (currentStage == 0 && numStages > 1 && 
+                      stages[currentStage+1].get_label().get_children().length() == 2) {
                     stages[currentStage+1].remove_label_dot();
                 }
             }
         }
         stageLabels.show_all();
+    }
+
+    private bool current_stage_has_label() {
+        var labels = stageLabels.get_children();
+        for (int i = 0; i < labels.length(); i++) {
+            var labelEventBox = (EventBox)labels.nth_data(i);
+            if (stages[currentStage].get_label() == labelEventBox.get_child()) return true;
+        }
+        return false;
     }
 
     public void update_theme() {
@@ -394,9 +402,11 @@ public class PTimer {
         stageRight.set_image(stageRightSkip);
         stageRight.set_tooltip_text("Skip To Next");
 
-        if (stageStack.get_visible_child() != stages[currentStage].get_view()) {
-            stageStack.set_visible_child(stages[currentStage].get_view());
-        }
+        stageStack.set_visible_child(stages[currentStage].get_view());
+        
+        // if a staeg is played out of order, end the stages that precede it
+        for (int i = 0; i < currentStage; i++) stages[i].end();
+
         if (!stages[currentStage].active) {
             Timeout.add(0, update_time);
         }

@@ -164,7 +164,7 @@ public class Stage {
         var fontSize = 32;
         if (displayString.length == 10) fontSize = 28;
         if (displayString.length > 10) fontSize = 25;
-        
+
         TextIter fontStartIter;
         TextIter fontEndIter;
         buf.get_start_iter(out fontStartIter);
@@ -264,6 +264,7 @@ public class Stage {
         int64 currentTime = GLib.get_monotonic_time();
         timeLeft -= currentTime - lastUpdated;
         lastUpdated = currentTime;
+        update_display();
     }
 
     public void end() {

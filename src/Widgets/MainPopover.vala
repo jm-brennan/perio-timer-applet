@@ -7,7 +7,6 @@ public class MainPopover : Budgie.Popover {
     private ColorManager? colors = null;
     private SoundManager? sounds = null;
     private const string HELP_LINK = "https://github.com/jm-brennan/perio-timer-applet/blob/master/GUIDE.md";
-    //private SettingsManager? settings = null;
 
     private Stack? timerStack = null;
     private StackSwitcher? stackSwitcher = null;
@@ -24,9 +23,6 @@ public class MainPopover : Budgie.Popover {
     private int numTimers = 1;
     private const int MAX_TIMERS = 4;
 
-    // The main popover consists of a vertical box that contains a header, a stack
-    // switcher, and a stack of PTimers. It manages which timer is being shown and 
-    // the creation/deletion of new timers and switching between them
     public MainPopover(Widget? window_parent, int width, int height) {
         Object(relative_to: window_parent);
         this.width = width;
@@ -35,12 +31,14 @@ public class MainPopover : Budgie.Popover {
         add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK);
         add_events(Gdk.EventMask.KEY_PRESS_MASK | Gdk.EventMask.KEY_RELEASE_MASK);
         
+        // Page stack shows either the main timer page or various settings pages
         pageStack = new Stack();
         pageStack.set_transition_type(StackTransitionType.SLIDE_LEFT_RIGHT);
                 
         mainView = new Box(Orientation.VERTICAL, 0);
         mainView.set_homogeneous(false);
 
+        // header holds menu and delete timer/add timer buttons
         header = new HeaderBar();
         headerTitle = new Label("Perio Timer");
         headerTitle.get_style_context().add_class("ptimer-title");
@@ -85,6 +83,7 @@ public class MainPopover : Budgie.Popover {
         header.pack_start(headerSettings);
         header.pack_end(headerAddTimer);
         header.pack_end(headerDeleteTimer);
+        mainView.pack_start(header, false, false, 0);
 
         timerStack = new Stack();
         timerStack.set_transition_type(StackTransitionType.SLIDE_LEFT_RIGHT);
@@ -107,7 +106,6 @@ public class MainPopover : Budgie.Popover {
         timers[0] = new PTimer(this, colors, sounds, width, height);
         timerStack.add_titled(timers[0].get_view(), currentTimer.to_string(), "Timer 0");
         
-        mainView.pack_start(header, false, false, 0);
         mainView.pack_start(timerStack, false, false, 0);
 
         pageStack.add_named(mainView, "main");

@@ -128,6 +128,14 @@ public class ColorManager {
                 numThemes++;
             }
         } catch (GLib.Error e) {
+            // just run on default hardcoded color scheme if there was error in json
+            Color[] defaultColors = { Color() {r = 242, g =  95, b =  92},
+                                      Color() {r =   0, g = 253, b = 220},
+                                      Color() {r = 255, g = 224, b = 102},
+                                      Color() {r = 112, g = 193, b = 179}
+                                    };
+            themes = { ColorTheme() { name = "Default", colors = defaultColors } };
+            numThemes = 1;
             warning("Error parsing JSON colors: %s\n", e.message);
         }
     }
