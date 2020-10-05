@@ -34,13 +34,16 @@ public class Stage {
         this.colorOrder = colorOrder;
         this.doSeconds = doSeconds;
         
-        textView = new TextView();  
+        // @TODO make a class that extends textview to encapsulate/hide away all the
+        // styling code for it
+        textView = new TextView();
         update_color_theme();
         update_display();
         textView.set_justification(Justification.CENTER);
         textView.set_cursor_visible(false);
         textView.set_editable(false);
         textView.set_halign(Align.CENTER);
+        textView.set_valign(Align.CENTER);
         textView.show();
 
         labelBox = new Box(Orientation.HORIZONTAL, 0);

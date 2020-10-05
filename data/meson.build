@@ -1,4 +1,5 @@
 install_data(
+    'style/icons/periotimer-applet-symbolic.svg',
     'style/icons/periotimer-audio-volume-high-symbolic.svg',
     'style/icons/periotimer-audio-volume-muted-symbolic.svg',
     'style/icons/periotimer-media-playlist-repeat-rtl-symbolic.svg',

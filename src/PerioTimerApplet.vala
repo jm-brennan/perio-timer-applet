@@ -32,7 +32,7 @@ public class Applet : Budgie.Applet {
         );
 
         event_box = new EventBox();
-        Image icon = new Image.from_icon_name("appointment-soon-symbolic", IconSize.MENU);
+        Image icon = new Image.from_icon_name("periotimer-applet-symbolic", IconSize.MENU);
         event_box.add(icon);
 
         mainPopover = new MainPopover(event_box, 282, 300);

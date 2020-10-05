@@ -18,14 +18,11 @@ If you need a timer, that means you are doing something else. That sounds dumb, 
 
 The goal is for Perio Timer to work just as easily for the most complex pomodoro routines as well as a simple 5 minute timer.
 
-</br>
 
 # Installation
 To install this applet, be sure to have these dependencies:</br>
 ```
 budgie-desktop-devel
-glib2-devel
-libgtk-3-devel
 libjson-glib-devel
 vala
 meson
@@ -58,7 +55,6 @@ nohup budgie-panel --replace &
 
 Then, open the Budgie desktop settings and install to your panel.
 
-</br>
 
 # How To Use
 See the <a href="https://github.com/jm-brennan/perio-timer-applet/blob/master/GUIDE.md">usage guide</a>
