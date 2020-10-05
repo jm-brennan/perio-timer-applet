@@ -461,7 +461,7 @@ public class PTimer {
     }
 
     private void notify(string summary, string body) {
-        var cmd = "notify-send -a 'Perio Timer Applet' -i appointment-soon-symbolic '%s' '%s'".printf(summary, body);
+        var cmd = "notify-send -a 'Perio Timer Applet' -i periotimer-applet-symbolic '%s' '%s'".printf(summary, body);
         try {
             Process.spawn_command_line_async(cmd);
         } catch (GLib.SpawnError e) {
