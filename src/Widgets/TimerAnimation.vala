@@ -7,7 +7,12 @@ public class TimerAnimation : Gtk.Widget {
     private int height;
     private bool active = false;
     private bool needToDraw = true;
-    private int update_interval = 60;
+    
+    private const int MIN_INTERVAL = 60; 
+    // miliseconds per interval
+    private int updateInterval = MIN_INTERVAL;
+    // control quality of animation based on length of timer
+    private const int UPDATES_PER_DEGREE = 10;
 
     private unowned Stage[] stages = null;
     private int64 totalTime = 0;
@@ -29,6 +34,12 @@ public class TimerAnimation : Gtk.Widget {
         for (int i = 0; i < numStages; i++) {
             totalTime += stages[i].time;
         }
+
+        // set update interval such that there will be num UPDATES_PER_DEGREE
+        int64 totalTimeMS = totalTime / 1000;
+        int updateIntervalFromTime = (int)((float)(totalTimeMS / 360) / UPDATES_PER_DEGREE);
+        updateInterval = int.max(MIN_INTERVAL, updateIntervalFromTime);
+
         redraw_canvas();
     }
 
@@ -116,14 +127,14 @@ public class TimerAnimation : Gtk.Widget {
         active = true;
         needToDraw = true;
         redraw_canvas();
-        Timeout.add(update_interval, update); 
+        Timeout.add(updateInterval, update); 
     }
 
     public void set_need_to_draw(bool toDrawOrNotToDraw) {
         needToDraw = toDrawOrNotToDraw;
         if (needToDraw) {
             redraw_canvas();
-            Timeout.add(update_interval, update);
+            Timeout.add(updateInterval, update);
         }
     }
 }

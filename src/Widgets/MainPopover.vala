@@ -10,6 +10,7 @@ public class MainPopover : Budgie.Popover {
 
     private Stack? timerStack = null;
     private StackSwitcher? stackSwitcher = null;
+    private ScrolledWindow? stackSwitcherScroller = null;
     private Box? mainView = null;
     private HeaderBar? header = null;
     private Label? headerTitle = null;
@@ -91,14 +92,24 @@ public class MainPopover : Budgie.Popover {
         stackSwitcher.stack = timerStack;
         stackSwitcher.set_homogeneous(true);
         stackSwitcher.get_style_context().add_class("ptimer");
+
+        stackSwitcherScroller = new ScrolledWindow(null, null);
+        stackSwitcherScroller.height_request = 30;
+        var viewport = new Viewport(null, null);
+
+        viewport.add(stackSwitcher);
+        stackSwitcherScroller.add(viewport);
+
         timerStack.notify["visible-child"].connect(() => {
             // @TODO this is a temporary way of naming the stacks/setting which one is 
             // visible, will be changed when new naming technique is decided/implemented
-            string visibleChildName = timerStack.get_visible_child_name();
-            if (visibleChildName == null) {
-                visibleChildName = "0";
+            var visibleChild = timerStack.get_visible_child();
+            for (int i = 0; i < numTimers; i++) {
+                if (timers[i].get_view() == visibleChild) {
+                    currentTimer = i;
+                    return;
+                }
             }
-            currentTimer = int.parse(visibleChildName);
         });
 
         colors = new ColorManager(pageStack, timers);
@@ -121,8 +132,8 @@ public class MainPopover : Budgie.Popover {
         if (numTimers == MAX_TIMERS) return;
         
         if (numTimers == 1) {
-            mainView.pack_start(stackSwitcher, true, true, 0);
-            mainView.reorder_child(stackSwitcher, 1);
+            mainView.pack_start(stackSwitcherScroller, true, true, 0);
+            mainView.reorder_child(stackSwitcherScroller, 1);
         }
         currentTimer = numTimers;
         numTimers++;
@@ -137,6 +148,7 @@ public class MainPopover : Budgie.Popover {
 
     public void delete_timer() {
         if (timers[currentTimer].get_active()) return;
+
 
         // the call to remove triggers the timerStack.notify["visible-child"] callback
         // which sets currentTimer to the currently visible child but we don't want that
@@ -161,7 +173,7 @@ public class MainPopover : Budgie.Popover {
             
             numTimers--;
             if (numTimers == 1) {
-                mainView.remove(stackSwitcher);
+                mainView.remove(stackSwitcherScroller);
             }
         }
         mainView.show_all();

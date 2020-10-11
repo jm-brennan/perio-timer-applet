@@ -92,6 +92,8 @@ public class InputManager {
         // else process for keybindings
         if (keyval >= 48 && keyval <= 57) {
             if (inputString.length < allowedInputLength) {
+                if (inputString.length == 0 && key == "0") return;
+                
                 inputString += key;
                 timer.set_input_time(inputString);
             }
