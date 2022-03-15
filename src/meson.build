@@ -13,7 +13,8 @@ applet_deps = [
     dep_budgie,
     dep_gtk3,
     dep_glib,
-    dep_json
+    dep_json,
+    meson.get_compiler('c').find_library('m', required: false)
 ]
 
 applet_sources = [
